@@ -110,31 +110,50 @@ class GitHubGistManager {
      * Créer un nouveau gist
      */
     async createGist() {
-        const response = await fetch(`${this.apiBase}/gists`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                description: 'Favoris Bourse Dashboard',
-                public: false,
-                files: {
-                    'favorites.json': {
-                        content: JSON.stringify({ favorites: [] }, null, 2)
+        console.log('🔧 Création d\'un nouveau Gist...');
+
+        try {
+            const response = await fetch(`${this.apiBase}/gists`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    description: 'Favoris Bourse Dashboard',
+                    public: false,
+                    files: {
+                        'favorites.json': {
+                            content: JSON.stringify({ favorites: [] }, null, 2)
+                        }
                     }
-                }
-            })
-        });
+                })
+            });
 
-        if (!response.ok) {
-            throw new Error('Erreur création Gist');
+            if (!response.ok) {
+                const errorBody = await response.text();
+                console.error('❌ Erreur création Gist:', response.status, errorBody);
+                throw new Error(`Erreur création Gist (${response.status}): ${errorBody}`);
+            }
+
+            const data = await response.json();
+            this.gistId = data.id;
+            localStorage.setItem('gist_id', data.id);
+
+            // Mettre à jour config.js si possible
+            if (window.APP_CONFIG) {
+                window.APP_CONFIG.gistId = data.id;
+            }
+
+            console.log('✅ Gist créé avec succès!', data.id);
+            console.log('📝 Pour mémoriser ce Gist, ajoutez cette ligne dans votre config.js :');
+            console.log(`   gistId: '${data.id}',`);
+
+            return data;
+        } catch (error) {
+            console.error('❌ Erreur lors de la création du Gist:', error);
+            throw error;
         }
-
-        const data = await response.json();
-        this.gistId = data.id;
-        localStorage.setItem('gist_id', data.id);
-        return data;
     }
 
     /**
@@ -142,14 +161,17 @@ class GitHubGistManager {
      */
     async getFavorites() {
         if (!this.isConfigured()) {
+            console.warn('⚠️ GitHub non configuré, pas de favoris à récupérer');
             return [];
         }
 
         if (!this.gistId) {
-            // Créer un nouveau gist si inexistant
+            console.log('ℹ️ Pas de Gist existant, création...');
             await this.createGist();
             return [];
         }
+
+        console.log('📥 Récupération des favoris depuis GitHub Gist...', this.gistId);
 
         try {
             const response = await fetch(`${this.apiBase}/gists/${this.gistId}`, {
@@ -159,14 +181,17 @@ class GitHubGistManager {
             });
 
             if (!response.ok) {
+                console.error('❌ Gist non trouvé (status:', response.status, ')');
                 throw new Error('Gist non trouvé');
             }
 
             const data = await response.json();
             const content = data.files['favorites.json'].content;
-            return JSON.parse(content).favorites;
+            const favorites = JSON.parse(content).favorites;
+            console.log('✅ Favoris récupérés:', favorites.length, 'favoris');
+            return favorites;
         } catch (error) {
-            console.error('Erreur récupération favoris:', error);
+            console.error('❌ Erreur récupération favoris:', error);
             return [];
         }
     }
@@ -180,29 +205,48 @@ class GitHubGistManager {
         }
 
         if (!this.gistId) {
+            console.warn('⚠️ Pas de gistId trouvé, création d\'un nouveau Gist...');
             await this.createGist();
         }
 
-        const response = await fetch(`${this.apiBase}/gists/${this.gistId}`, {
-            method: 'PATCH',
-            headers: {
-                'Authorization': `Bearer ${this.token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                files: {
-                    'favorites.json': {
-                        content: JSON.stringify({ favorites }, null, 2)
-                    }
-                }
-            })
+        console.log('💾 Sauvegarde des favoris sur GitHub Gist...', {
+            gistId: this.gistId,
+            nbFavoris: favorites.length
         });
 
-        if (!response.ok) {
-            throw new Error('Erreur sauvegarde Gist');
-        }
+        try {
+            const response = await fetch(`${this.apiBase}/gists/${this.gistId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    files: {
+                        'favorites.json': {
+                            content: JSON.stringify({ favorites }, null, 2)
+                        }
+                    }
+                })
+            });
 
-        return await response.json();
+            if (!response.ok) {
+                const errorBody = await response.text();
+                console.error('❌ Erreur sauvegarde Gist:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    body: errorBody
+                });
+                throw new Error(`Erreur sauvegarde Gist (${response.status}): ${errorBody}`);
+            }
+
+            const data = await response.json();
+            console.log('✅ Favoris sauvegardés sur GitHub Gist avec succès!');
+            return data;
+        } catch (error) {
+            console.error('❌ Erreur lors de la sauvegarde:', error);
+            throw error;
+        }
     }
 
     /**
@@ -1301,15 +1345,31 @@ async function displayFavorites() {
  */
 async function addFavorite(symbol, name) {
     try {
+        console.log('⭐ Ajout aux favoris:', { symbol, name });
         const added = await gistManager.addFavorite(symbol, name);
         if (added) {
             await displayFavorites();
             updateFavoriteButton(symbol, true);
+
+            // Afficher notification de succès
+            showNotification('✅ Favori ajouté et synchronisé sur GitHub Gist!', 'success');
         }
     } catch (error) {
-        alert('Erreur : GitHub non configuré. Cliquez sur ⚙️ pour configurer.');
-        const configBtn = document.getElementById('configGithubBtn');
-        if (configBtn) configBtn.click();
+        console.error('❌ Erreur ajout favori:', error);
+
+        // Message d'erreur détaillé
+        let errorMsg = 'Erreur lors de l\'ajout aux favoris:\n';
+        if (error.message.includes('401')) {
+            errorMsg += 'Token GitHub invalide ou expiré. Vérifiez votre config.js';
+        } else if (error.message.includes('404')) {
+            errorMsg += 'Gist non trouvé. Supprimez le gistId dans config.js et réessayez.';
+        } else if (error.message.includes('GitHub non configuré')) {
+            errorMsg += 'Configurez votre token GitHub en cliquant sur ⚙️';
+        } else {
+            errorMsg += error.message;
+        }
+
+        alert(errorMsg);
     }
 }
 
@@ -1333,6 +1393,27 @@ function updateFavoriteButton(symbol, isFavorite) {
     }
 }
 
+/**
+ * Affiche une notification temporaire
+ */
+function showNotification(message, type = 'info') {
+    // Créer l'élément notification
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+
+    // Ajouter au body
+    document.body.appendChild(notification);
+
+    // Afficher avec animation
+    setTimeout(() => notification.classList.add('show'), 10);
+
+    // Masquer après 3 secondes
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
 
 /**
  * Fonction de recherche
