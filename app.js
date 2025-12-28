@@ -1031,10 +1031,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('saveGithubToken').addEventListener('click', () => {
         const token = document.getElementById('githubToken').value.trim();
+        const gistId = document.getElementById('githubGistId').value.trim();
+
         if (token) {
             gistManager.setToken(token);
+
+            // Sauvegarder aussi le gistId si fourni
+            if (gistId) {
+                gistManager.gistId = gistId;
+                localStorage.setItem('gist_id', gistId);
+                console.log('✅ Gist ID configuré:', gistId);
+            } else {
+                console.log('ℹ️ Pas de Gist ID fourni - un nouveau Gist sera créé lors du premier favori');
+            }
+
             document.getElementById('githubConfigModal').classList.add('hidden');
             document.getElementById('githubToken').value = '';
+            document.getElementById('githubGistId').value = '';
             displayFavorites();
         } else {
             alert('Veuillez entrer un token valide');
@@ -1044,6 +1057,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('cancelGithubToken').addEventListener('click', () => {
         document.getElementById('githubConfigModal').classList.add('hidden');
         document.getElementById('githubToken').value = '';
+        document.getElementById('githubGistId').value = '';
     });
 
     // Charger les données initiales

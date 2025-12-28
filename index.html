@@ -96,17 +96,40 @@
     <div id="githubConfigModal" class="modal hidden">
         <div class="modal-content">
             <h2>Configuration GitHub</h2>
-            <p><strong>Vous avez déjà un fichier token.txt ?</strong></p>
-            <p>Ouvrez-le, copiez le token, et collez-le ci-dessous.</p>
+
+            <div class="config-section">
+                <h3>📱 Première utilisation ?</h3>
+                <ol>
+                    <li>Allez sur <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings → Personal Access Tokens</a></li>
+                    <li>Cliquez "Generate new token (classic)"</li>
+                    <li>Cochez le scope <strong>gist</strong></li>
+                    <li>Copiez le token et collez-le ci-dessous</li>
+                    <li>Laissez le Gist ID vide (un nouveau Gist sera créé automatiquement)</li>
+                </ol>
+            </div>
+
+            <div class="config-section">
+                <h3>🔄 Synchroniser avec un autre appareil ?</h3>
+                <ol>
+                    <li>Sur votre autre appareil, ouvrez la console (F12)</li>
+                    <li>Cherchez le message : <code>📥 Récupération des favoris depuis GitHub Gist... [ID]</code></li>
+                    <li>Copiez le Gist ID (ex: 96d4a70c1fa49af5510c3ebc56543039)</li>
+                    <li>Collez le token ET le Gist ID ci-dessous</li>
+                </ol>
+            </div>
+
             <hr>
-            <p><strong>Créer un nouveau token :</strong></p>
-            <ol>
-                <li>Allez sur <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings → Personal Access Tokens</a></li>
-                <li>Cliquez "Generate new token (classic)"</li>
-                <li>Cochez le scope <strong>gist</strong></li>
-                <li>Copiez le token et collez-le ci-dessous</li>
-            </ol>
+
             <input type="password" id="githubToken" placeholder="Collez votre token ici (ghp_xxxxxxxxxxxx)">
+
+            <div class="form-group">
+                <label for="githubGistId">Gist ID (optionnel - pour synchroniser avec un autre appareil)</label>
+                <input type="text" id="githubGistId" placeholder="Ex: 96d4a70c1fa49af5510c3ebc56543039">
+                <small class="help-text">
+                    💡 Laissez vide pour créer un nouveau Gist.<br>
+                    Pour synchroniser avec votre PC, saisissez le Gist ID affiché dans la console du PC.
+                </small>
+            </div>
             <div class="modal-buttons">
                 <button id="saveGithubToken">Enregistrer</button>
                 <button id="cancelGithubToken">Annuler</button>
