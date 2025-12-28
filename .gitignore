@@ -1,6 +1,9 @@
 # Token GitHub (ne jamais commiter!)
 token.txt
-config.js
 
 # Ne pas ignorer le fichier d'exemple
 !config.example.js
+
+# config.js est maintenant PUBLIC (l'utilisateur accepte le risque)
+# Il permet la synchronisation automatique sur tous les appareils
+# Si vous clonez ce projet : créez votre propre token et gistId
