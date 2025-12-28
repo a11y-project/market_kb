@@ -1,6 +1,6 @@
 /**
  * Application JavaScript pour le tableau de bord financier
- * Appels directs aux APIs Yahoo Finance et CoinGecko
+ * Appels directs à l'API Yahoo Finance
  */
 
 class MarketAPI {
@@ -54,62 +54,6 @@ class MarketAPI {
         }
     }
 
-    /**
-     * Recherche d'une crypto via CoinGecko
-     */
-    async searchCrypto(cryptoId) {
-        cryptoId = cryptoId.toLowerCase().trim();
-        const url = 'https://api.coingecko.com/api/v3/simple/price';
-        const params = new URLSearchParams({
-            ids: cryptoId,
-            vs_currencies: 'usd,eur',
-            include_24hr_change: 'true',
-            include_market_cap: 'true',
-            include_24hr_vol: 'true'
-        });
-
-        try {
-            const response = await fetch(`${url}?${params}`);
-            const data = await response.json();
-
-            if (data[cryptoId]) {
-                const info = data[cryptoId];
-                return {
-                    success: true,
-                    type: 'crypto',
-                    symbol: cryptoId.toUpperCase(),
-                    name: this.formatCryptoName(cryptoId),
-                    priceUSD: info.usd || 0,
-                    priceEUR: info.eur || 0,
-                    change24h: info.usd_24h_change || 0,
-                    marketCap: info.usd_market_cap || 0,
-                    volume24h: info.usd_24h_vol || 0
-                };
-            } else {
-                return { success: false, error: 'Crypto non trouvée' };
-            }
-        } catch (error) {
-            console.error('Erreur recherche crypto:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    /**
-     * Formatte le nom d'une crypto
-     */
-    formatCryptoName(cryptoId) {
-        const cryptoNames = {
-            'bitcoin': 'Bitcoin',
-            'ethereum': 'Ethereum',
-            'binancecoin': 'Binance Coin',
-            'cardano': 'Cardano',
-            'solana': 'Solana',
-            'ripple': 'Ripple',
-            'polkadot': 'Polkadot',
-            'dogecoin': 'Dogecoin'
-        };
-        return cryptoNames[cryptoId] || cryptoId.charAt(0).toUpperCase() + cryptoId.slice(1);
-    }
 
     /**
      * Récupère les actualités pour un symbole via Yahoo Finance
@@ -193,38 +137,6 @@ class MarketAPI {
         return results;
     }
 
-    /**
-     * Récupère les cryptos populaires
-     */
-    async getTopCryptos() {
-        const cryptos = ['bitcoin', 'ethereum', 'binancecoin', 'cardano', 'solana'];
-        const url = 'https://api.coingecko.com/api/v3/simple/price';
-        const params = new URLSearchParams({
-            ids: cryptos.join(','),
-            vs_currencies: 'usd',
-            include_24hr_change: 'true'
-        });
-
-        try {
-            const response = await fetch(`${url}?${params}`);
-            const data = await response.json();
-
-            const results = [];
-            for (const crypto of cryptos) {
-                if (data[crypto]) {
-                    results.push({
-                        name: this.formatCryptoName(crypto),
-                        price: data[crypto].usd || 0,
-                        change: data[crypto].usd_24h_change || 0
-                    });
-                }
-            }
-            return results;
-        } catch (error) {
-            console.error('Erreur récupération cryptos:', error);
-            return [];
-        }
-    }
 
     /**
      * Recherche pour l'autocomplétion
@@ -250,7 +162,7 @@ class MarketAPI {
             const results = [];
             if (data.quotes) {
                 for (const quote of data.quotes) {
-                    if (['EQUITY', 'ETF', 'CRYPTOCURRENCY', 'INDEX'].includes(quote.quoteType)) {
+                    if (['EQUITY', 'ETF', 'INDEX'].includes(quote.quoteType)) {
                         results.push({
                             symbol: quote.symbol || '',
                             name: quote.longname || quote.shortname || '',
@@ -355,17 +267,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 /**
- * Charge les données initiales (indices et cryptos)
+ * Charge les données initiales (indices)
  */
 async function loadInitialData() {
     try {
         // Charger les indices boursiers
         const indices = await marketAPI.getMarketOverview();
         displayIndices(indices);
-
-        // Charger les cryptos populaires
-        const cryptos = await marketAPI.getTopCryptos();
-        displayCryptos(cryptos);
     } catch (error) {
         console.error('Erreur chargement données initiales:', error);
     }
@@ -397,31 +305,6 @@ function displayIndices(indices) {
     });
 }
 
-/**
- * Affiche les cryptos populaires
- */
-function displayCryptos(cryptos) {
-    const container = document.querySelector('.crypto-section .cards-grid');
-    container.innerHTML = '';
-
-    cryptos.forEach(crypto => {
-        const changeClass = crypto.change >= 0 ? 'positive' : 'negative';
-        const changeSymbol = crypto.change >= 0 ? '+' : '';
-
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-            <div class="card-header">
-                <h3>${crypto.name}</h3>
-                <span class="badge ${changeClass}">
-                    ${changeSymbol}${crypto.change.toFixed(2)}%
-                </span>
-            </div>
-            <div class="card-price">$${crypto.price.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-        `;
-        container.appendChild(card);
-    });
-}
 
 /**
  * Fonction de recherche
@@ -430,37 +313,21 @@ async function performSearch() {
     const query = searchInput.value.trim();
     if (!query) return;
 
-    const searchType = document.querySelector('input[name="searchType"]:checked').value;
-
     // Masquer les résultats précédents
     searchResult.classList.add('hidden');
     errorMessage.classList.add('hidden');
 
     try {
-        let result = null;
-
-        // Essayer en tant qu'action d'abord
-        if (searchType === 'auto' || searchType === 'stock') {
-            result = await marketAPI.searchStock(query);
-            if (result.success) {
-                result.type = 'stock';
-                // Ajouter les actualités pour les actions
-                result.news = await marketAPI.getNews(query, result.name);
-                displayResult(result);
-                return;
-            }
+        // Rechercher l'action
+        const result = await marketAPI.searchStock(query);
+        if (result.success) {
+            result.type = 'stock';
+            // Ajouter les actualités pour les actions
+            result.news = await marketAPI.getNews(query, result.name);
+            displayResult(result);
+        } else {
+            showError('Symbole non trouvé');
         }
-
-        // Essayer en tant que crypto
-        if (searchType === 'auto' || searchType === 'crypto') {
-            result = await marketAPI.searchCrypto(query);
-            if (result.success) {
-                displayResult(result);
-                return;
-            }
-        }
-
-        showError('Symbole non trouvé');
     } catch (error) {
         showError('Erreur de connexion: ' + error.message);
     }
@@ -534,77 +401,44 @@ function displayNews(news) {
  */
 function displayResult(data) {
     resultSymbol.textContent = data.symbol || data.name;
+    resultType.textContent = 'Action';
+    resultType.className = 'badge stock';
 
-    if (data.type === 'stock') {
-        resultType.textContent = 'Action';
-        resultType.className = 'badge stock';
+    const changeClass = data.change >= 0 ? 'positive' : 'negative';
+    const changeSymbol = data.change >= 0 ? '+' : '';
 
-        const changeClass = data.change >= 0 ? 'positive' : 'negative';
-        const changeSymbol = data.change >= 0 ? '+' : '';
-
-        resultContent.innerHTML = `
-            <div class="result-grid">
-                <div class="result-item main">
-                    <div class="result-label">Prix</div>
-                    <div class="result-value large">${data.currency} ${data.price.toFixed(2)}</div>
-                    <div class="result-change ${changeClass}">
-                        ${changeSymbol}${data.changeAbs.toFixed(2)} (${changeSymbol}${data.change.toFixed(2)}%)
-                    </div>
-                </div>
-                <div class="result-item">
-                    <div class="result-label">Ouverture</div>
-                    <div class="result-value">${data.open.toFixed(2)}</div>
-                </div>
-                <div class="result-item">
-                    <div class="result-label">Plus haut</div>
-                    <div class="result-value">${data.high.toFixed(2)}</div>
-                </div>
-                <div class="result-item">
-                    <div class="result-label">Plus bas</div>
-                    <div class="result-value">${data.low.toFixed(2)}</div>
-                </div>
-                <div class="result-item">
-                    <div class="result-label">Clôture préc.</div>
-                    <div class="result-value">${data.previousClose.toFixed(2)}</div>
-                </div>
-                <div class="result-item">
-                    <div class="result-label">Volume</div>
-                    <div class="result-value">${data.volume.toLocaleString('fr-FR')}</div>
+    resultContent.innerHTML = `
+        <div class="result-grid">
+            <div class="result-item main">
+                <div class="result-label">Prix</div>
+                <div class="result-value large">${data.currency} ${data.price.toFixed(2)}</div>
+                <div class="result-change ${changeClass}">
+                    ${changeSymbol}${data.changeAbs.toFixed(2)} (${changeSymbol}${data.change.toFixed(2)}%)
                 </div>
             </div>
-            ${displayNews(data.news)}
-        `;
-    } else if (data.type === 'crypto') {
-        resultType.textContent = 'Crypto';
-        resultType.className = 'badge crypto';
-
-        const changeClass = data.change24h >= 0 ? 'positive' : 'negative';
-        const changeSymbol = data.change24h >= 0 ? '+' : '';
-
-        resultContent.innerHTML = `
-            <div class="result-grid">
-                <div class="result-item main">
-                    <div class="result-label">Prix USD</div>
-                    <div class="result-value large">$${data.priceUSD.toLocaleString('fr-FR')}</div>
-                    <div class="result-change ${changeClass}">
-                        ${changeSymbol}${data.change24h.toFixed(2)}% (24h)
-                    </div>
-                </div>
-                <div class="result-item">
-                    <div class="result-label">Prix EUR</div>
-                    <div class="result-value">€${data.priceEUR.toLocaleString('fr-FR')}</div>
-                </div>
-                <div class="result-item">
-                    <div class="result-label">Capitalisation</div>
-                    <div class="result-value">$${(data.marketCap / 1e9).toFixed(2)}B</div>
-                </div>
-                <div class="result-item">
-                    <div class="result-label">Volume 24h</div>
-                    <div class="result-value">$${(data.volume24h / 1e9).toFixed(2)}B</div>
-                </div>
+            <div class="result-item">
+                <div class="result-label">Ouverture</div>
+                <div class="result-value">${data.open.toFixed(2)}</div>
             </div>
-        `;
-    }
+            <div class="result-item">
+                <div class="result-label">Plus haut</div>
+                <div class="result-value">${data.high.toFixed(2)}</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Plus bas</div>
+                <div class="result-value">${data.low.toFixed(2)}</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Clôture préc.</div>
+                <div class="result-value">${data.previousClose.toFixed(2)}</div>
+            </div>
+            <div class="result-item">
+                <div class="result-label">Volume</div>
+                <div class="result-value">${data.volume.toLocaleString('fr-FR')}</div>
+            </div>
+        </div>
+        ${displayNews(data.news)}
+    `;
 
     searchResult.classList.remove('hidden');
 }

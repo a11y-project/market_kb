@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Tableau de bord financier - Suivez les actions, cryptomonnaies et indices boursiers en temps réel">
-    <meta name="keywords" content="bourse, finance, actions, crypto, trading, investissement">
+    <meta name="description" content="Tableau de bord financier - Suivez les actions et indices boursiers en temps réel">
+    <meta name="keywords" content="bourse, finance, actions, trading, investissement, CAC 40">
     <title>Tableau de Bord Financier</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -12,31 +12,17 @@
     <div class="container">
         <header>
             <h1>Tableau de Bord Financier</h1>
-            <p class="subtitle">Recherchez des actions et cryptomonnaies en temps réel</p>
+            <p class="subtitle">Recherchez des actions en temps réel</p>
         </header>
 
         <!-- Barre de recherche -->
         <div class="search-section">
             <div class="search-box">
                 <div class="search-input-wrapper">
-                    <input type="text" id="searchInput" placeholder="Rechercher une action ou crypto (ex: Apple, Microsoft, Tesla)" autocomplete="off">
+                    <input type="text" id="searchInput" placeholder="Rechercher une action (ex: Apple, Microsoft, Tesla)" autocomplete="off">
                     <div id="autocompleteResults" class="autocomplete-results hidden"></div>
                 </div>
                 <button id="searchBtn">Rechercher</button>
-            </div>
-            <div class="search-type">
-                <label>
-                    <input type="radio" name="searchType" value="auto" checked>
-                    Auto
-                </label>
-                <label>
-                    <input type="radio" name="searchType" value="stock">
-                    Action
-                </label>
-                <label>
-                    <input type="radio" name="searchType" value="crypto">
-                    Crypto
-                </label>
             </div>
         </div>
 
@@ -66,19 +52,6 @@
             </div>
         </div>
 
-        <!-- Cryptos populaires -->
-        <div class="crypto-section">
-            <h2>Cryptomonnaies Populaires</h2>
-            <div class="cards-grid">
-                <!-- Les cartes seront générées dynamiquement par JavaScript -->
-                <div class="card loading">
-                    <div class="card-header">
-                        <h3>Chargement...</h3>
-                    </div>
-                    <div class="card-price">---</div>
-                </div>
-            </div>
-        </div>
 
         <!-- Exemples de recherche -->
         <div class="examples">
@@ -88,17 +61,17 @@
                 <span class="example-tag" data-search="MSFT">MSFT (Microsoft)</span>
                 <span class="example-tag" data-search="GOOGL">GOOGL (Google)</span>
                 <span class="example-tag" data-search="TSLA">TSLA (Tesla)</span>
-                <span class="example-tag" data-search="bitcoin">Bitcoin</span>
-                <span class="example-tag" data-search="ethereum">Ethereum</span>
+                <span class="example-tag" data-search="NVDA">NVDA (NVIDIA)</span>
                 <span class="example-tag" data-search="MC.PA">MC.PA (LVMH)</span>
                 <span class="example-tag" data-search="OR.PA">OR.PA (L'Oréal)</span>
+                <span class="example-tag" data-search="TTE.PA">TTE.PA (TotalEnergies)</span>
             </div>
         </div>
 
         <footer>
-            <p>Données fournies par Yahoo Finance et CoinGecko</p>
+            <p>Données fournies par Yahoo Finance</p>
             <p class="footer-note">Projet open source - Hébergé sur GitHub Pages</p>
-        </footer>
+</footer>
     </div>
 
     <!-- Script JavaScript -->
