@@ -247,6 +247,74 @@ class MarketAPI {
     }
 
     /**
+     * Récupère la liste des ETF/ETC matières premières PEA
+     */
+    async getCommoditiesList() {
+        const commodities = {
+            'SGLD.PA': {
+                name: 'WisdomTree Physical Swiss Gold',
+                commodity: 'Or',
+                description: 'ETC adossé à de l\'or physique stocké en Suisse'
+            },
+            'GOLD.PA': {
+                name: 'Amundi Physical Gold',
+                commodity: 'Or',
+                description: 'ETC 100% adossé à de l\'or physique'
+            },
+            'SLVR.PA': {
+                name: 'WisdomTree Physical Silver',
+                commodity: 'Argent',
+                description: 'ETC adossé à de l\'argent physique'
+            },
+            'COPA.L': {
+                name: 'WisdomTree Copper',
+                commodity: 'Cuivre',
+                description: 'ETC suivant le cours du cuivre'
+            }
+        };
+
+        const results = [];
+        for (const [symbol, info] of Object.entries(commodities)) {
+            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
+            const params = new URLSearchParams({
+                interval: '1d',
+                range: '5d'
+            });
+
+            try {
+                const response = await fetch(`${this.corsProxy}${encodeURIComponent(url + '?' + params)}`);
+                const data = await response.json();
+
+                if (data.chart && data.chart.result && data.chart.result.length > 0) {
+                    const meta = data.chart.result[0].meta;
+                    const price = meta.regularMarketPrice || 0;
+                    const prevClose = meta.previousClose || 0;
+                    const change = prevClose ? ((price - prevClose) / prevClose * 100) : 0;
+
+                    results.push({
+                        symbol: symbol,
+                        name: info.name,
+                        commodity: info.commodity,
+                        description: info.description,
+                        price: price,
+                        change: change,
+                        open: meta.regularMarketOpen || 0,
+                        high: meta.regularMarketDayHigh || 0,
+                        low: meta.regularMarketDayLow || 0,
+                        volume: meta.regularMarketVolume || 0,
+                        currency: meta.currency || 'EUR'
+                    });
+                }
+                await this.sleep(300);
+            } catch (error) {
+                console.error(`Erreur pour ${symbol}:`, error);
+            }
+        }
+
+        return results;
+    }
+
+    /**
      * Récupère les données historiques pour un symbole
      */
     async getHistoricalData(symbol, range = '1y') {
@@ -746,6 +814,10 @@ async function loadInitialData() {
         // Charger les ETF PEA européens
         const etfs = await marketAPI.getETFList();
         displayETFs(etfs);
+
+        // Charger les matières premières PEA
+        const commodities = await marketAPI.getCommoditiesList();
+        displayCommodities(commodities);
     } catch (error) {
         console.error('Erreur chargement données initiales:', error);
     }
@@ -827,6 +899,95 @@ function toggleETF(index) {
         if (i !== index && otherItem.classList.contains('active')) {
             otherItem.classList.remove('active');
             const otherContent = otherItem.querySelector('.etf-content');
+            otherContent.style.maxHeight = null;
+        }
+    });
+
+    // Toggle l'accordéon actuel
+    item.classList.toggle('active');
+    if (item.classList.contains('active')) {
+        content.style.maxHeight = content.scrollHeight + 'px';
+    } else {
+        content.style.maxHeight = null;
+    }
+}
+
+/**
+ * Affiche les matières premières PEA avec accordéons
+ */
+function displayCommodities(commodities) {
+    const container = document.querySelector('#commoditiesAccordion');
+    container.innerHTML = '';
+
+    commodities.forEach((commodity, index) => {
+        const changeClass = commodity.change >= 0 ? 'positive' : 'negative';
+        const changeSymbol = commodity.change >= 0 ? '+' : '';
+        const changeIcon = commodity.change >= 0 ? '↑' : '↓';
+
+        const commodityItem = document.createElement('div');
+        commodityItem.className = 'commodity-item';
+        commodityItem.innerHTML = `
+            <div class="commodity-header" data-index="${index}">
+                <div class="commodity-header-left">
+                    <div class="commodity-name">${commodity.name}</div>
+                    <div class="commodity-type">${commodity.commodity} • ${commodity.symbol}</div>
+                </div>
+                <div class="commodity-header-right">
+                    <div class="commodity-price">${commodity.price.toFixed(2)} ${commodity.currency}</div>
+                    <div class="commodity-change ${changeClass}">
+                        ${changeIcon} ${changeSymbol}${commodity.change.toFixed(2)}%
+                    </div>
+                </div>
+                <div class="commodity-chevron">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="commodity-content" data-index="${index}">
+                <div class="commodity-description">${commodity.description}</div>
+                <div class="commodity-details-grid">
+                    <div class="commodity-detail">
+                        <div class="commodity-detail-label">Ouverture</div>
+                        <div class="commodity-detail-value">${commodity.open.toFixed(2)} ${commodity.currency}</div>
+                    </div>
+                    <div class="commodity-detail">
+                        <div class="commodity-detail-label">Plus haut</div>
+                        <div class="commodity-detail-value">${commodity.high.toFixed(2)} ${commodity.currency}</div>
+                    </div>
+                    <div class="commodity-detail">
+                        <div class="commodity-detail-label">Plus bas</div>
+                        <div class="commodity-detail-value">${commodity.low.toFixed(2)} ${commodity.currency}</div>
+                    </div>
+                    <div class="commodity-detail">
+                        <div class="commodity-detail-label">Volume</div>
+                        <div class="commodity-detail-value">${formatLargeNumber(commodity.volume)}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Ajouter l'événement click pour l'accordéon
+        const header = commodityItem.querySelector('.commodity-header');
+        header.addEventListener('click', () => toggleCommodity(index));
+
+        container.appendChild(commodityItem);
+    });
+}
+
+/**
+ * Gère l'ouverture/fermeture d'un accordéon matière première
+ */
+function toggleCommodity(index) {
+    const content = document.querySelector(`.commodity-content[data-index="${index}"]`);
+    const header = document.querySelector(`.commodity-header[data-index="${index}"]`);
+    const item = header.closest('.commodity-item');
+
+    // Fermer tous les autres accordéons
+    document.querySelectorAll('.commodity-item').forEach((otherItem, i) => {
+        if (i !== index && otherItem.classList.contains('active')) {
+            otherItem.classList.remove('active');
+            const otherContent = otherItem.querySelector('.commodity-content');
             otherContent.style.maxHeight = null;
         }
     });

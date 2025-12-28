@@ -1000,3 +1000,255 @@ footer {
         padding: 15px;
     }
 }
+
+/* ===================================
+   Styles Matières Premières
+   =================================== */
+
+.commodities-section {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    margin-bottom: 30px;
+}
+
+.commodities-section h2 {
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 1.8rem;
+}
+
+.commodities-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.commodity-item {
+    background: linear-gradient(135deg, #fff9e6 0%, #ffffff 100%);
+    border-radius: 12px;
+    border: 1px solid #f0e4c3;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.commodity-item:hover {
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+    border-color: #ffc107;
+}
+
+.commodity-item.active {
+    border-color: #ffc107;
+    box-shadow: 0 4px 16px rgba(255, 193, 7, 0.3);
+}
+
+.commodity-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    position: relative;
+}
+
+.commodity-header:hover {
+    background: linear-gradient(135deg, #fffbf0 0%, #ffffff 100%);
+}
+
+.commodity-item.active .commodity-header {
+    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+    color: white;
+}
+
+.commodity-header-left {
+    flex: 1;
+}
+
+.commodity-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.commodity-item.active .commodity-name {
+    color: white;
+}
+
+.commodity-type {
+    font-size: 0.85rem;
+    color: #666;
+    opacity: 0.9;
+}
+
+.commodity-item.active .commodity-type {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.commodity-header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    margin-right: 12px;
+}
+
+.commodity-price {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.commodity-item.active .commodity-price {
+    color: white;
+}
+
+.commodity-change {
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+.commodity-change.positive {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.commodity-change.negative {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.commodity-item.active .commodity-change.positive {
+    background: rgba(255, 255, 255, 0.25);
+    color: #e8f5e9;
+}
+
+.commodity-item.active .commodity-change.negative {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffcdd2;
+}
+
+.commodity-chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+}
+
+.commodity-item.active .commodity-chevron {
+    transform: rotate(180deg);
+}
+
+.commodity-chevron svg {
+    color: #666;
+}
+
+.commodity-item.active .commodity-chevron svg {
+    color: white;
+}
+
+/* Contenu accordéon */
+.commodity-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background: white;
+}
+
+.commodity-description {
+    padding: 20px 20px 15px 20px;
+    color: #555;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.commodity-details-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    padding: 20px;
+}
+
+.commodity-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.commodity-detail-label {
+    font-size: 0.8rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.commodity-detail-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Loading state */
+.commodity-item.loading {
+    pointer-events: none;
+}
+
+.commodity-item.loading .commodity-header {
+    background: linear-gradient(90deg, #fff9e6 25%, #ffeaa7 50%, #fff9e6 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .commodity-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .commodity-header-right {
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        margin-right: 0;
+    }
+
+    .commodity-chevron {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+    }
+
+    .commodity-details-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .commodities-section {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .commodity-details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .commodity-name {
+        font-size: 1rem;
+    }
+
+    .commodity-price {
+        font-size: 1rem;
+    }
+
+    .commodities-section {
+        padding: 15px;
+    }
+}
