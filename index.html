@@ -27,6 +27,27 @@
             </div>
         </div>
 
+        <!-- Mes Favoris -->
+        <div class="favorites-section" id="favoritesSection">
+            <div class="favorites-header">
+                <h2>Mes Favoris</h2>
+                <button id="configGithubBtn" class="config-btn" title="Configurer GitHub">Configurer</button>
+            </div>
+            <div id="favoritesAccordion" class="favorites-accordion">
+                <div class="favorite-item loading">
+                    <div class="favorite-header">
+                        <span>Chargement...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message d'aide si GitHub n'est pas configuré -->
+        <div id="githubHelpMessage" class="help-message hidden">
+            <p>💡 <strong>Configuration détectée :</strong> Votre fichier <code>config.js</code> a été chargé avec succès!</p>
+            <p>Si vous souhaitez modifier votre token, cliquez sur le bouton "Configurer".</p>
+        </div>
+
         <!-- Résultat de la recherche -->
         <div id="searchResult" class="result-card hidden">
             <div class="result-header">
@@ -70,6 +91,31 @@
             <p class="footer-note">Projet open source - Hébergé sur GitHub Pages</p>
 </footer>
     </div>
+
+    <!-- Modal Configuration GitHub -->
+    <div id="githubConfigModal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Configuration GitHub</h2>
+            <p><strong>Vous avez déjà un fichier token.txt ?</strong></p>
+            <p>Ouvrez-le, copiez le token, et collez-le ci-dessous.</p>
+            <hr>
+            <p><strong>Créer un nouveau token :</strong></p>
+            <ol>
+                <li>Allez sur <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings → Personal Access Tokens</a></li>
+                <li>Cliquez "Generate new token (classic)"</li>
+                <li>Cochez le scope <strong>gist</strong></li>
+                <li>Copiez le token et collez-le ci-dessous</li>
+            </ol>
+            <input type="password" id="githubToken" placeholder="Collez votre token ici (ghp_xxxxxxxxxxxx)">
+            <div class="modal-buttons">
+                <button id="saveGithubToken">Enregistrer</button>
+                <button id="cancelGithubToken">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration (chargée en premier) -->
+    <script src="config.js"></script>
 
     <!-- Script JavaScript -->
     <script src="app.js"></script>

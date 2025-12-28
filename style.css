@@ -1252,3 +1252,333 @@ footer {
         padding: 15px;
     }
 }
+
+/* ===================================
+   Styles Favoris
+   =================================== */
+
+.favorites-section {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    margin-bottom: 30px;
+}
+
+.favorites-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.favorites-header h2 {
+    color: #333;
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+.config-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: background 0.2s;
+}
+
+.config-btn:hover {
+    background: #f0f0f0;
+}
+
+.favorites-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.favorite-item {
+    background: linear-gradient(135deg, #e8f5e9 0%, #ffffff 100%);
+    border-radius: 12px;
+    border: 1px solid #c8e6c9;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.favorite-item:hover {
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+    border-color: #4caf50;
+}
+
+.favorite-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    cursor: pointer;
+    position: relative;
+}
+
+.favorite-header:hover {
+    background: linear-gradient(135deg, #f1f8f1 0%, #ffffff 100%);
+}
+
+.favorite-header-left {
+    flex: 1;
+}
+
+.favorite-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.favorite-symbol {
+    font-size: 0.85rem;
+    color: #666;
+    opacity: 0.9;
+}
+
+.favorite-header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    margin-right: 50px;
+}
+
+.favorite-price {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.favorite-change {
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+.favorite-delete {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    transition: background 0.2s;
+}
+
+.favorite-delete:hover {
+    background: rgba(244, 67, 54, 0.1);
+}
+
+/* Bouton étoile sur résultat */
+.favorite-star-btn {
+    background: none;
+    border: 2px solid #ffc107;
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 10px;
+    transition: all 0.2s;
+    margin-left: 20px;
+}
+
+.favorite-star-btn:hover {
+    background: #fff9e6;
+    transform: scale(1.1);
+}
+
+.result-main-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Modal GitHub */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    color: #333;
+}
+
+.modal-content p {
+    color: #555;
+    line-height: 1.6;
+}
+
+.modal-content ol {
+    text-align: left;
+    color: #555;
+    line-height: 1.8;
+}
+
+.modal-content ol li {
+    margin-bottom: 8px;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    margin: 15px 0;
+    box-sizing: border-box;
+}
+
+.modal-content input:focus {
+    outline: none;
+    border-color: #4caf50;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.modal-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: opacity 0.2s;
+    font-weight: 600;
+}
+
+.modal-buttons button:first-child {
+    background: #4caf50;
+    color: white;
+}
+
+.modal-buttons button:last-child {
+    background: #f44336;
+    color: white;
+}
+
+.modal-buttons button:hover {
+    opacity: 0.8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .favorite-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .favorite-header-right {
+        flex-direction: row;
+        gap: 12px;
+        margin-right: 0;
+    }
+
+    .favorite-delete {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+    }
+
+    .favorite-star-btn {
+        margin-left: 0;
+        margin-top: 15px;
+    }
+
+    .result-main-info {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .favorites-section {
+        padding: 20px;
+    }
+
+    .modal-content {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .favorites-section {
+        padding: 15px;
+    }
+
+    .favorite-name {
+        font-size: 1rem;
+    }
+
+    .favorite-price {
+        font-size: 1rem;
+    }
+
+    .favorite-star-btn {
+        font-size: 1.5rem;
+        padding: 8px 15px;
+    }
+
+    .modal-content {
+        padding: 15px;
+    }
+
+    .modal-content h2 {
+        font-size: 1.3rem;
+    }
+}
+
+/* ===================================
+   Message d'aide
+   =================================== */
+
+.help-message {
+    background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
+    border-left: 4px solid #2196f3;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.help-message p {
+    margin: 5px 0;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+.help-message code {
+    background: #f5f5f5;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    color: #d32f2f;
+}

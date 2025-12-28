@@ -67,6 +67,183 @@ class CacheManager {
     }
 }
 
+/**
+ * Gestionnaire GitHub Gist pour stocker les favoris
+ */
+class GitHubGistManager {
+    constructor() {
+        // Priorité 1 : Charger depuis config.js (si existe)
+        if (window.APP_CONFIG && window.APP_CONFIG.githubToken && window.APP_CONFIG.githubToken !== 'YOUR_GITHUB_TOKEN_HERE') {
+            this.token = window.APP_CONFIG.githubToken;
+            this.gistId = window.APP_CONFIG.gistId;
+            // Sauvegarder aussi dans localStorage pour compatibilité
+            if (this.token) {
+                localStorage.setItem('github_token', this.token);
+            }
+            if (this.gistId) {
+                localStorage.setItem('gist_id', this.gistId);
+            }
+        } else {
+            // Priorité 2 : Fallback sur localStorage (configuration manuelle via modal)
+            this.gistId = localStorage.getItem('gist_id');
+            this.token = localStorage.getItem('github_token');
+        }
+        this.apiBase = 'https://api.github.com';
+    }
+
+    /**
+     * Configure le token GitHub
+     */
+    setToken(token) {
+        this.token = token;
+        localStorage.setItem('github_token', token);
+    }
+
+    /**
+     * Vérifie si le token est configuré
+     */
+    isConfigured() {
+        return !!this.token;
+    }
+
+    /**
+     * Créer un nouveau gist
+     */
+    async createGist() {
+        const response = await fetch(`${this.apiBase}/gists`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                description: 'Favoris Bourse Dashboard',
+                public: false,
+                files: {
+                    'favorites.json': {
+                        content: JSON.stringify({ favorites: [] }, null, 2)
+                    }
+                }
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Erreur création Gist');
+        }
+
+        const data = await response.json();
+        this.gistId = data.id;
+        localStorage.setItem('gist_id', data.id);
+        return data;
+    }
+
+    /**
+     * Récupérer les favoris depuis le gist
+     */
+    async getFavorites() {
+        if (!this.isConfigured()) {
+            return [];
+        }
+
+        if (!this.gistId) {
+            // Créer un nouveau gist si inexistant
+            await this.createGist();
+            return [];
+        }
+
+        try {
+            const response = await fetch(`${this.apiBase}/gists/${this.gistId}`, {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Gist non trouvé');
+            }
+
+            const data = await response.json();
+            const content = data.files['favorites.json'].content;
+            return JSON.parse(content).favorites;
+        } catch (error) {
+            console.error('Erreur récupération favoris:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Sauvegarder les favoris dans le gist
+     */
+    async saveFavorites(favorites) {
+        if (!this.isConfigured()) {
+            throw new Error('GitHub non configuré');
+        }
+
+        if (!this.gistId) {
+            await this.createGist();
+        }
+
+        const response = await fetch(`${this.apiBase}/gists/${this.gistId}`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                files: {
+                    'favorites.json': {
+                        content: JSON.stringify({ favorites }, null, 2)
+                    }
+                }
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Erreur sauvegarde Gist');
+        }
+
+        return await response.json();
+    }
+
+    /**
+     * Ajouter un favori
+     */
+    async addFavorite(symbol, name) {
+        const favorites = await this.getFavorites();
+
+        // Vérifier si déjà en favoris
+        if (favorites.some(f => f.symbol === symbol)) {
+            return false;
+        }
+
+        favorites.push({
+            symbol,
+            name,
+            addedDate: new Date().toISOString()
+        });
+
+        await this.saveFavorites(favorites);
+        return true;
+    }
+
+    /**
+     * Supprimer un favori
+     */
+    async removeFavorite(symbol) {
+        const favorites = await this.getFavorites();
+        const filtered = favorites.filter(f => f.symbol !== symbol);
+        await this.saveFavorites(filtered);
+    }
+
+    /**
+     * Vérifier si un symbole est en favoris
+     */
+    async isFavorite(symbol) {
+        const favorites = await this.getFavorites();
+        return favorites.some(f => f.symbol === symbol);
+    }
+}
+
 class MarketAPI {
     constructor() {
         this.corsProxy = 'https://api.allorigins.win/raw?url=';
@@ -487,6 +664,7 @@ class MarketAPI {
 
 // Instance globale de l'API
 const marketAPI = new MarketAPI();
+const gistManager = new GitHubGistManager();
 
 /**
  * Formate un grand nombre en notation abrégée (T, B, M, K)
@@ -802,6 +980,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
+    // Event listeners pour la configuration GitHub
+    document.getElementById('configGithubBtn').addEventListener('click', () => {
+        document.getElementById('githubConfigModal').classList.remove('hidden');
+    });
+
+    document.getElementById('saveGithubToken').addEventListener('click', () => {
+        const token = document.getElementById('githubToken').value.trim();
+        if (token) {
+            gistManager.setToken(token);
+            document.getElementById('githubConfigModal').classList.add('hidden');
+            document.getElementById('githubToken').value = '';
+            displayFavorites();
+        } else {
+            alert('Veuillez entrer un token valide');
+        }
+    });
+
+    document.getElementById('cancelGithubToken').addEventListener('click', () => {
+        document.getElementById('githubConfigModal').classList.add('hidden');
+        document.getElementById('githubToken').value = '';
+    });
+
     // Charger les données initiales
     await loadInitialData();
 });
@@ -811,6 +1011,9 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 async function loadInitialData() {
     try {
+        // Charger les favoris en premier
+        await displayFavorites();
+
         // Charger les ETF PEA européens
         const etfs = await marketAPI.getETFList();
         displayETFs(etfs);
@@ -1001,6 +1204,135 @@ function toggleCommodity(index) {
     }
 }
 
+/**
+ * Affiche les favoris avec accordéons
+ */
+async function displayFavorites() {
+    const container = document.querySelector('#favoritesAccordion');
+    const section = document.querySelector('#favoritesSection');
+    const helpMessage = document.getElementById('githubHelpMessage');
+
+    // Toujours afficher la section (pour voir le bouton de configuration)
+    section.classList.remove('hidden');
+
+    if (!gistManager.isConfigured()) {
+        // Afficher message d'aide pour configuration manuelle
+        container.innerHTML = '<div class="favorite-item"><div class="favorite-header">Aucun favori configuré. Cliquez sur "Configurer" pour commencer.</div></div>';
+        if (helpMessage) {
+            helpMessage.classList.add('hidden');
+        }
+        return;
+    }
+
+    // Afficher message de succès si config.js chargé
+    if (window.APP_CONFIG && window.APP_CONFIG.githubToken && window.APP_CONFIG.githubToken !== 'YOUR_GITHUB_TOKEN_HERE') {
+        if (helpMessage) {
+            helpMessage.classList.remove('hidden');
+        }
+    } else {
+        if (helpMessage) {
+            helpMessage.classList.add('hidden');
+        }
+    }
+
+    const favorites = await gistManager.getFavorites();
+
+    if (favorites.length === 0) {
+        container.innerHTML = '<div class="favorite-item"><div class="favorite-header">Aucun favori pour le moment. Recherchez une action et cliquez sur ☆</div></div>';
+        return;
+    }
+
+    container.innerHTML = '';
+
+    // Récupérer les prix en temps réel
+    for (const favorite of favorites) {
+        try {
+            const stockData = await marketAPI.searchStock(favorite.symbol);
+
+            if (stockData.success) {
+                const changeClass = stockData.change >= 0 ? 'positive' : 'negative';
+                const changeSymbol = stockData.change >= 0 ? '+' : '';
+                const changeIcon = stockData.change >= 0 ? '↑' : '↓';
+
+                const favoriteItem = document.createElement('div');
+                favoriteItem.className = 'favorite-item';
+                favoriteItem.innerHTML = `
+                    <div class="favorite-header" data-symbol="${favorite.symbol}">
+                        <div class="favorite-header-left">
+                            <div class="favorite-name">${favorite.name}</div>
+                            <div class="favorite-symbol">${favorite.symbol}</div>
+                        </div>
+                        <div class="favorite-header-right">
+                            <div class="favorite-price">${stockData.price.toFixed(2)} ${stockData.currency}</div>
+                            <div class="favorite-change ${changeClass}">
+                                ${changeIcon} ${changeSymbol}${stockData.change.toFixed(2)}%
+                            </div>
+                        </div>
+                        <button class="favorite-delete" data-symbol="${favorite.symbol}" title="Supprimer">🗑️</button>
+                    </div>
+                `;
+
+                // Event: Clic sur en-tête = rechercher l'action
+                const header = favoriteItem.querySelector('.favorite-header');
+                header.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('favorite-delete')) {
+                        document.getElementById('searchInput').value = favorite.symbol;
+                        performSearch();
+                    }
+                });
+
+                // Event: Supprimer
+                const deleteBtn = favoriteItem.querySelector('.favorite-delete');
+                deleteBtn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    await removeFavorite(favorite.symbol);
+                });
+
+                container.appendChild(favoriteItem);
+            }
+        } catch (error) {
+            console.error(`Erreur chargement favori ${favorite.symbol}:`, error);
+        }
+    }
+}
+
+/**
+ * Ajouter un favori
+ */
+async function addFavorite(symbol, name) {
+    try {
+        const added = await gistManager.addFavorite(symbol, name);
+        if (added) {
+            await displayFavorites();
+            updateFavoriteButton(symbol, true);
+        }
+    } catch (error) {
+        alert('Erreur : GitHub non configuré. Cliquez sur ⚙️ pour configurer.');
+        const configBtn = document.getElementById('configGithubBtn');
+        if (configBtn) configBtn.click();
+    }
+}
+
+/**
+ * Supprimer un favori
+ */
+async function removeFavorite(symbol) {
+    await gistManager.removeFavorite(symbol);
+    await displayFavorites();
+    updateFavoriteButton(symbol, false);
+}
+
+/**
+ * Met à jour le bouton étoile
+ */
+function updateFavoriteButton(symbol, isFavorite) {
+    const btn = document.querySelector('.favorite-star-btn');
+    if (btn) {
+        btn.textContent = isFavorite ? '⭐' : '☆';
+        btn.dataset.favorited = isFavorite;
+    }
+}
+
 
 /**
  * Fonction de recherche
@@ -1103,16 +1435,24 @@ async function displayResult(data) {
     const changeClass = data.change >= 0 ? 'positive' : 'negative';
     const changeSymbol = data.change >= 0 ? '+' : '';
 
+    // Vérifier si en favoris
+    const isFav = await gistManager.isFavorite(data.symbol);
+
     // Afficher la structure HTML avec placeholders pour chargement asynchrone
     resultContent.innerHTML = `
-        <div class="result-grid">
-            <div class="result-item main">
-                <div class="result-label">Prix</div>
-                <div class="result-value large">${data.currency} ${data.price.toFixed(2)}</div>
-                <div class="result-change ${changeClass}">
-                    ${changeSymbol}${data.changeAbs.toFixed(2)} (${changeSymbol}${data.change.toFixed(2)}%)
+        <div class="result-main-info">
+            <div class="result-grid">
+                <div class="result-item main">
+                    <div class="result-label">Prix</div>
+                    <div class="result-value large">${data.currency} ${data.price.toFixed(2)}</div>
+                    <div class="result-change ${changeClass}">
+                        ${changeSymbol}${data.changeAbs.toFixed(2)} (${changeSymbol}${data.change.toFixed(2)}%)
+                    </div>
                 </div>
             </div>
+            <button class="favorite-star-btn" data-symbol="${data.symbol}" data-name="${data.name}" data-favorited="${isFav}">
+                ${isFav ? '⭐' : '☆'}
+            </button>
         </div>
 
         <!-- Section Métriques Financières -->
@@ -1176,6 +1516,23 @@ async function displayResult(data) {
     `;
 
     searchResult.classList.remove('hidden');
+
+    // Event listener pour le bouton favori
+    const starBtn = document.querySelector('.favorite-star-btn');
+    if (starBtn) {
+        starBtn.addEventListener('click', async (e) => {
+            const btn = e.target;
+            const symbol = btn.dataset.symbol;
+            const name = btn.dataset.name;
+            const isFavorited = btn.dataset.favorited === 'true';
+
+            if (isFavorited) {
+                await removeFavorite(symbol);
+            } else {
+                await addFavorite(symbol, name);
+            }
+        });
+    }
 
     // Charger les données enrichies de manière asynchrone
     await loadEnhancedData(data.symbol, data.price);

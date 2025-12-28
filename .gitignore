@@ -1,0 +1,6 @@
+# Token GitHub (ne jamais commiter!)
+token.txt
+config.js
+
+# Ne pas ignorer le fichier d'exemple
+!config.example.js
