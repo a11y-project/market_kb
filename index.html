@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tableau de bord financier - Suivez les actions, cryptomonnaies et indices boursiers en temps réel">
+    <meta name="keywords" content="bourse, finance, actions, crypto, trading, investissement">
+    <title>Tableau de Bord Financier</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Tableau de Bord Financier</h1>
+            <p class="subtitle">Recherchez des actions et cryptomonnaies en temps réel</p>
+        </header>
+
+        <!-- Barre de recherche -->
+        <div class="search-section">
+            <div class="search-box">
+                <div class="search-input-wrapper">
+                    <input type="text" id="searchInput" placeholder="Rechercher une action ou crypto (ex: Apple, Microsoft, Tesla)" autocomplete="off">
+                    <div id="autocompleteResults" class="autocomplete-results hidden"></div>
+                </div>
+                <button id="searchBtn">Rechercher</button>
+            </div>
+            <div class="search-type">
+                <label>
+                    <input type="radio" name="searchType" value="auto" checked>
+                    Auto
+                </label>
+                <label>
+                    <input type="radio" name="searchType" value="stock">
+                    Action
+                </label>
+                <label>
+                    <input type="radio" name="searchType" value="crypto">
+                    Crypto
+                </label>
+            </div>
+        </div>
+
+        <!-- Résultat de la recherche -->
+        <div id="searchResult" class="result-card hidden">
+            <div class="result-header">
+                <h2 id="resultSymbol"></h2>
+                <span id="resultType" class="badge"></span>
+            </div>
+            <div id="resultContent"></div>
+        </div>
+
+        <!-- Message d'erreur -->
+        <div id="errorMessage" class="error-message hidden"></div>
+
+        <!-- Aperçu du marché -->
+        <div class="market-overview">
+            <h2>Indices Boursiers</h2>
+            <div class="cards-grid">
+                <!-- Les cartes seront générées dynamiquement par JavaScript -->
+                <div class="card loading">
+                    <div class="card-header">
+                        <h3>Chargement...</h3>
+                    </div>
+                    <div class="card-price">---</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cryptos populaires -->
+        <div class="crypto-section">
+            <h2>Cryptomonnaies Populaires</h2>
+            <div class="cards-grid">
+                <!-- Les cartes seront générées dynamiquement par JavaScript -->
+                <div class="card loading">
+                    <div class="card-header">
+                        <h3>Chargement...</h3>
+                    </div>
+                    <div class="card-price">---</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exemples de recherche -->
+        <div class="examples">
+            <h3>Exemples de recherche :</h3>
+            <div class="example-tags">
+                <span class="example-tag" data-search="AAPL">AAPL (Apple)</span>
+                <span class="example-tag" data-search="MSFT">MSFT (Microsoft)</span>
+                <span class="example-tag" data-search="GOOGL">GOOGL (Google)</span>
+                <span class="example-tag" data-search="TSLA">TSLA (Tesla)</span>
+                <span class="example-tag" data-search="bitcoin">Bitcoin</span>
+                <span class="example-tag" data-search="ethereum">Ethereum</span>
+                <span class="example-tag" data-search="MC.PA">MC.PA (LVMH)</span>
+                <span class="example-tag" data-search="OR.PA">OR.PA (L'Oréal)</span>
+            </div>
+        </div>
+
+        <footer>
+            <p>Données fournies par Yahoo Finance et CoinGecko</p>
+            <p class="footer-note">Projet open source - Hébergé sur GitHub Pages</p>
+        </footer>
+    </div>
+
+    <!-- Script JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>
