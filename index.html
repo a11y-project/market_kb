@@ -7,6 +7,7 @@
     <meta name="keywords" content="bourse, finance, actions, trading, investissement, CAC 40">
     <title>Tableau de Bord Financier</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
 </head>
 <body>
     <div class="container">
@@ -38,33 +39,16 @@
         <!-- Message d'erreur -->
         <div id="errorMessage" class="error-message hidden"></div>
 
-        <!-- Aperçu du marché -->
-        <div class="market-overview">
-            <h2>Indices Boursiers</h2>
-            <div class="cards-grid">
-                <!-- Les cartes seront générées dynamiquement par JavaScript -->
-                <div class="card loading">
-                    <div class="card-header">
-                        <h3>Chargement...</h3>
+        <!-- ETF PEA Européens -->
+        <div class="etf-section">
+            <h2>ETF disponibles sur PEA</h2>
+            <div id="etfAccordion" class="etf-accordion">
+                <!-- Les ETF seront générés dynamiquement par JavaScript -->
+                <div class="etf-item loading">
+                    <div class="etf-header">
+                        <span>Chargement des ETF...</span>
                     </div>
-                    <div class="card-price">---</div>
                 </div>
-            </div>
-        </div>
-
-
-        <!-- Exemples de recherche -->
-        <div class="examples">
-            <h3>Exemples de recherche :</h3>
-            <div class="example-tags">
-                <span class="example-tag" data-search="AAPL">AAPL (Apple)</span>
-                <span class="example-tag" data-search="MSFT">MSFT (Microsoft)</span>
-                <span class="example-tag" data-search="GOOGL">GOOGL (Google)</span>
-                <span class="example-tag" data-search="TSLA">TSLA (Tesla)</span>
-                <span class="example-tag" data-search="NVDA">NVDA (NVIDIA)</span>
-                <span class="example-tag" data-search="MC.PA">MC.PA (LVMH)</span>
-                <span class="example-tag" data-search="OR.PA">OR.PA (L'Oréal)</span>
-                <span class="example-tag" data-search="TTE.PA">TTE.PA (TotalEnergies)</span>
             </div>
         </div>
 
