@@ -10,7 +10,7 @@
 
 window.APP_CONFIG = {
     // Token GitHub PUBLIC - Scope: gist uniquement
-    githubToken: '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',
+    githubToken: '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',
 
     // Gist ID pour synchronisation multi-appareils
     gistId: '96d4a70c1fa49af5510c3ebc56543039'
