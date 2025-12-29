@@ -67,226 +67,6 @@ class CacheManager {
     }
 }
 
-/**
- * Gestionnaire GitHub Gist pour stocker les favoris
- */
-class GitHubGistManager {
-    constructor() {
-        // Priorité 1 : Charger depuis config.js (si existe)
-        if (window.APP_CONFIG && window.APP_CONFIG.githubToken && window.APP_CONFIG.githubToken !== 'YOUR_GITHUB_TOKEN_HERE') {
-            this.token = window.APP_CONFIG.githubToken;
-            this.gistId = window.APP_CONFIG.gistId;
-            // Sauvegarder aussi dans localStorage pour compatibilité
-            if (this.token) {
-                localStorage.setItem('github_token', this.token);
-            }
-            if (this.gistId) {
-                localStorage.setItem('gist_id', this.gistId);
-            }
-        } else {
-            // Priorité 2 : Fallback sur localStorage (configuration manuelle via modal)
-            this.gistId = localStorage.getItem('gist_id');
-            this.token = localStorage.getItem('github_token');
-        }
-        this.apiBase = 'https://api.github.com';
-    }
-
-    /**
-     * Configure le token GitHub
-     */
-    setToken(token) {
-        this.token = token;
-        localStorage.setItem('github_token', token);
-    }
-
-    /**
-     * Vérifie si le token est configuré
-     */
-    isConfigured() {
-        return !!this.token;
-    }
-
-    /**
-     * Créer un nouveau gist
-     */
-    async createGist() {
-        console.log('🔧 Création d\'un nouveau Gist...');
-
-        try {
-            const response = await fetch(`${this.apiBase}/gists`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    description: 'Favoris Bourse Dashboard',
-                    public: false,
-                    files: {
-                        'favorites.json': {
-                            content: JSON.stringify({ favorites: [] }, null, 2)
-                        }
-                    }
-                })
-            });
-
-            if (!response.ok) {
-                const errorBody = await response.text();
-                console.error('❌ Erreur création Gist:', response.status, errorBody);
-                throw new Error(`Erreur création Gist (${response.status}): ${errorBody}`);
-            }
-
-            const data = await response.json();
-            this.gistId = data.id;
-            localStorage.setItem('gist_id', data.id);
-
-            // Mettre à jour config.js si possible
-            if (window.APP_CONFIG) {
-                window.APP_CONFIG.gistId = data.id;
-            }
-
-            console.log('✅ Gist créé avec succès!', data.id);
-            console.log('📝 Pour mémoriser ce Gist, ajoutez cette ligne dans votre config.js :');
-            console.log(`   gistId: '${data.id}',`);
-
-            return data;
-        } catch (error) {
-            console.error('❌ Erreur lors de la création du Gist:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Récupérer les favoris depuis le gist
-     */
-    async getFavorites() {
-        if (!this.isConfigured()) {
-            console.warn('⚠️ GitHub non configuré, pas de favoris à récupérer');
-            return [];
-        }
-
-        if (!this.gistId) {
-            console.log('ℹ️ Pas de Gist existant, création...');
-            await this.createGist();
-            return [];
-        }
-
-        console.log('📥 Récupération des favoris depuis GitHub Gist...', this.gistId);
-
-        try {
-            const response = await fetch(`${this.apiBase}/gists/${this.gistId}`, {
-                headers: {
-                    'Authorization': `Bearer ${this.token}`
-                }
-            });
-
-            if (!response.ok) {
-                console.error('❌ Gist non trouvé (status:', response.status, ')');
-                throw new Error('Gist non trouvé');
-            }
-
-            const data = await response.json();
-            const content = data.files['favorites.json'].content;
-            const favorites = JSON.parse(content).favorites;
-            console.log('✅ Favoris récupérés:', favorites.length, 'favoris');
-            return favorites;
-        } catch (error) {
-            console.error('❌ Erreur récupération favoris:', error);
-            return [];
-        }
-    }
-
-    /**
-     * Sauvegarder les favoris dans le gist
-     */
-    async saveFavorites(favorites) {
-        if (!this.isConfigured()) {
-            throw new Error('GitHub non configuré');
-        }
-
-        if (!this.gistId) {
-            console.warn('⚠️ Pas de gistId trouvé, création d\'un nouveau Gist...');
-            await this.createGist();
-        }
-
-        console.log('💾 Sauvegarde des favoris sur GitHub Gist...', {
-            gistId: this.gistId,
-            nbFavoris: favorites.length
-        });
-
-        try {
-            const response = await fetch(`${this.apiBase}/gists/${this.gistId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    files: {
-                        'favorites.json': {
-                            content: JSON.stringify({ favorites }, null, 2)
-                        }
-                    }
-                })
-            });
-
-            if (!response.ok) {
-                const errorBody = await response.text();
-                console.error('❌ Erreur sauvegarde Gist:', {
-                    status: response.status,
-                    statusText: response.statusText,
-                    body: errorBody
-                });
-                throw new Error(`Erreur sauvegarde Gist (${response.status}): ${errorBody}`);
-            }
-
-            const data = await response.json();
-            console.log('✅ Favoris sauvegardés sur GitHub Gist avec succès!');
-            return data;
-        } catch (error) {
-            console.error('❌ Erreur lors de la sauvegarde:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Ajouter un favori
-     */
-    async addFavorite(symbol, name) {
-        const favorites = await this.getFavorites();
-
-        // Vérifier si déjà en favoris
-        if (favorites.some(f => f.symbol === symbol)) {
-            return false;
-        }
-
-        favorites.push({
-            symbol,
-            name,
-            addedDate: new Date().toISOString()
-        });
-
-        await this.saveFavorites(favorites);
-        return true;
-    }
-
-    /**
-     * Supprimer un favori
-     */
-    async removeFavorite(symbol) {
-        const favorites = await this.getFavorites();
-        const filtered = favorites.filter(f => f.symbol !== symbol);
-        await this.saveFavorites(filtered);
-    }
-
-    /**
-     * Vérifier si un symbole est en favoris
-     */
-    async isFavorite(symbol) {
-        const favorites = await this.getFavorites();
-        return favorites.some(f => f.symbol === symbol);
-    }
-}
 
 class MarketAPI {
     constructor() {
@@ -383,45 +163,71 @@ class MarketAPI {
      */
     async getETFList() {
         const etfs = {
-            'CW8.PA': {
-                name: 'Amundi MSCI World',
-                region: 'Monde',
-                description: 'Actions mondiales des pays développés'
-            },
-            'PAEEM.PA': {
-                name: 'Amundi MSCI Emerging Markets',
-                region: 'Marchés émergents',
-                description: 'Actions des pays émergents'
-            },
-            '500.PA': {
-                name: 'Lyxor S&P 500',
-                region: 'États-Unis',
-                description: 'Les 500 plus grandes entreprises américaines'
-            },
             'CAC.PA': {
                 name: 'Amundi CAC 40',
+                category: 'ETF PEA France',
                 region: 'France',
                 description: 'Les 40 plus grandes entreprises françaises'
             },
             'ESE.PA': {
                 name: 'Amundi Euro Stoxx 50',
+                category: 'ETF PEA Europe',
                 region: 'Zone Euro',
                 description: 'Les 50 plus grandes entreprises de la zone euro'
             },
             'AAEU.PA': {
                 name: 'Amundi MSCI Europe',
+                category: 'ETF PEA Europe',
                 region: 'Europe',
                 description: 'Actions des grandes entreprises européennes'
             },
-            'RS2K.PA': {
-                name: 'Amundi Russell 2000',
+            '500.PA': {
+                name: 'Lyxor S&P 500',
+                category: 'ETF PEA S&P 500',
                 region: 'États-Unis',
-                description: 'Petites et moyennes capitalisations américaines'
+                description: 'Les 500 plus grandes entreprises américaines'
             },
             'PUST.PA': {
                 name: 'Amundi MSCI USA',
+                category: 'ETF PEA S&P 500',
                 region: 'États-Unis',
                 description: 'Large couverture du marché américain'
+            },
+            'RS2K.PA': {
+                name: 'Amundi Russell 2000',
+                category: 'ETF PEA small caps',
+                region: 'États-Unis',
+                description: 'Petites et moyennes capitalisations américaines'
+            },
+            'PANX.PA': {
+                name: 'Amundi PEA US Tech Screened',
+                category: 'ETF PEA sur la tech américaine',
+                region: 'États-Unis',
+                description: 'Actions technologiques américaines (Nasdaq-100)'
+            },
+            'CW8.PA': {
+                name: 'Amundi MSCI World',
+                category: 'ETF PEA MSCI World',
+                region: 'Monde',
+                description: 'Actions mondiales des pays développés'
+            },
+            'PAEEM.PA': {
+                name: 'Amundi MSCI Emerging Markets',
+                category: 'ETF PEA Emerging Markets',
+                region: 'Marchés émergents',
+                description: 'Actions des pays émergents'
+            },
+            'PINR.PA': {
+                name: 'Amundi PEA Inde (MSCI India)',
+                category: 'ETF PEA sur l\'Inde',
+                region: 'Inde',
+                description: 'Actions des principales entreprises indiennes'
+            },
+            'AWAT.PA': {
+                name: 'Amundi PEA Eau (MSCI Water)',
+                category: 'ETF PEA sur l\'eau',
+                region: 'Monde',
+                description: 'Actions des entreprises du secteur de l\'eau et des services publics'
             }
         };
 
@@ -446,6 +252,7 @@ class MarketAPI {
                     results.push({
                         symbol: symbol,
                         name: info.name,
+                        category: info.category,
                         region: info.region,
                         description: info.description,
                         price: price,
@@ -454,78 +261,11 @@ class MarketAPI {
                         high: meta.regularMarketDayHigh || 0,
                         low: meta.regularMarketDayLow || 0,
                         volume: meta.regularMarketVolume || 0,
-                        currency: meta.currency || 'EUR'
+                        currency: meta.currency || 'EUR',
+                        apiResponse: data // Stocker la réponse brute de l'API
                     });
                 }
                 // Petit délai pour éviter de surcharger l'API
-                await this.sleep(300);
-            } catch (error) {
-                console.error(`Erreur pour ${symbol}:`, error);
-            }
-        }
-
-        return results;
-    }
-
-    /**
-     * Récupère la liste des ETF/ETC matières premières PEA
-     */
-    async getCommoditiesList() {
-        const commodities = {
-            'SGLD.PA': {
-                name: 'WisdomTree Physical Swiss Gold',
-                commodity: 'Or',
-                description: 'ETC adossé à de l\'or physique stocké en Suisse'
-            },
-            'GOLD.PA': {
-                name: 'Amundi Physical Gold',
-                commodity: 'Or',
-                description: 'ETC 100% adossé à de l\'or physique'
-            },
-            'SLVR.PA': {
-                name: 'WisdomTree Physical Silver',
-                commodity: 'Argent',
-                description: 'ETC adossé à de l\'argent physique'
-            },
-            'COPA.L': {
-                name: 'WisdomTree Copper',
-                commodity: 'Cuivre',
-                description: 'ETC suivant le cours du cuivre'
-            }
-        };
-
-        const results = [];
-        for (const [symbol, info] of Object.entries(commodities)) {
-            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
-            const params = new URLSearchParams({
-                interval: '1d',
-                range: '5d'
-            });
-
-            try {
-                const response = await fetch(`${this.corsProxy}${encodeURIComponent(url + '?' + params)}`);
-                const data = await response.json();
-
-                if (data.chart && data.chart.result && data.chart.result.length > 0) {
-                    const meta = data.chart.result[0].meta;
-                    const price = meta.regularMarketPrice || 0;
-                    const prevClose = meta.previousClose || 0;
-                    const change = prevClose ? ((price - prevClose) / prevClose * 100) : 0;
-
-                    results.push({
-                        symbol: symbol,
-                        name: info.name,
-                        commodity: info.commodity,
-                        description: info.description,
-                        price: price,
-                        change: change,
-                        open: meta.regularMarketOpen || 0,
-                        high: meta.regularMarketDayHigh || 0,
-                        low: meta.regularMarketDayLow || 0,
-                        volume: meta.regularMarketVolume || 0,
-                        currency: meta.currency || 'EUR'
-                    });
-                }
                 await this.sleep(300);
             } catch (error) {
                 console.error(`Erreur pour ${symbol}:`, error);
@@ -708,7 +448,6 @@ class MarketAPI {
 
 // Instance globale de l'API
 const marketAPI = new MarketAPI();
-const gistManager = new GitHubGistManager();
 
 /**
  * Formate un grand nombre en notation abrégée (T, B, M, K)
@@ -1024,42 +763,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // Event listeners pour la configuration GitHub
-    document.getElementById('configGithubBtn').addEventListener('click', () => {
-        document.getElementById('githubConfigModal').classList.remove('hidden');
-    });
-
-    document.getElementById('saveGithubToken').addEventListener('click', () => {
-        const token = document.getElementById('githubToken').value.trim();
-        const gistId = document.getElementById('githubGistId').value.trim();
-
-        if (token) {
-            gistManager.setToken(token);
-
-            // Sauvegarder aussi le gistId si fourni
-            if (gistId) {
-                gistManager.gistId = gistId;
-                localStorage.setItem('gist_id', gistId);
-                console.log('✅ Gist ID configuré:', gistId);
-            } else {
-                console.log('ℹ️ Pas de Gist ID fourni - un nouveau Gist sera créé lors du premier favori');
-            }
-
-            document.getElementById('githubConfigModal').classList.add('hidden');
-            document.getElementById('githubToken').value = '';
-            document.getElementById('githubGistId').value = '';
-            displayFavorites();
-        } else {
-            alert('Veuillez entrer un token valide');
-        }
-    });
-
-    document.getElementById('cancelGithubToken').addEventListener('click', () => {
-        document.getElementById('githubConfigModal').classList.add('hidden');
-        document.getElementById('githubToken').value = '';
-        document.getElementById('githubGistId').value = '';
-    });
-
     // Charger les données initiales
     await loadInitialData();
 });
@@ -1069,365 +772,125 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 async function loadInitialData() {
     try {
-        // Charger les favoris en premier
-        await displayFavorites();
-
         // Charger les ETF PEA européens
         const etfs = await marketAPI.getETFList();
         displayETFs(etfs);
-
-        // Charger les matières premières PEA
-        const commodities = await marketAPI.getCommoditiesList();
-        displayCommodities(commodities);
     } catch (error) {
         console.error('Erreur chargement données initiales:', error);
     }
 }
 
 /**
- * Affiche les ETF PEA avec accordéons
+ * Crée une carte ETF individuelle
+ */
+function createETFCard(etf) {
+    const changeClass = etf.change >= 0 ? 'positive' : 'negative';
+    const changeSymbol = etf.change >= 0 ? '+' : '';
+    const changeIcon = etf.change >= 0 ? '↑' : '↓';
+
+    const card = document.createElement('div');
+    card.className = 'etf-card';
+
+    card.innerHTML = `
+        <div class="etf-card-header">
+            <h3 class="etf-title">${etf.name}</h3>
+            <div class="etf-meta">${etf.region} • ${etf.symbol}</div>
+        </div>
+        <div class="etf-pricing">
+            <div class="etf-price">${etf.price.toFixed(2)} ${etf.currency}</div>
+            <div class="etf-change ${changeClass}">
+                ${changeIcon} ${changeSymbol}${etf.change.toFixed(2)}%
+            </div>
+        </div>
+        <div class="etf-description">${etf.description}</div>
+        <div class="etf-details-grid">
+            <div class="etf-detail">
+                <div class="etf-detail-label">Ouverture</div>
+                <div class="etf-detail-value">${etf.open.toFixed(2)} ${etf.currency}</div>
+            </div>
+            <div class="etf-detail">
+                <div class="etf-detail-label">Plus haut</div>
+                <div class="etf-detail-value">${etf.high.toFixed(2)} ${etf.currency}</div>
+            </div>
+            <div class="etf-detail">
+                <div class="etf-detail-label">Plus bas</div>
+                <div class="etf-detail-value">${etf.low.toFixed(2)} ${etf.currency}</div>
+            </div>
+            <div class="etf-detail">
+                <div class="etf-detail-label">Volume</div>
+                <div class="etf-detail-value">${formatLargeNumber(etf.volume)}</div>
+            </div>
+        </div>
+    `;
+
+    // Ajouter un event listener pour afficher les données de l'API en console
+    card.addEventListener('click', () => {
+        console.log('📊 Réponse API Yahoo Finance pour', etf.symbol, ':', etf.apiResponse);
+    });
+
+    // Ajouter un style pour indiquer que la carte est cliquable
+    card.style.cursor = 'pointer';
+
+    return card;
+}
+
+/**
+ * Affiche les ETF PEA groupés par catégories
  */
 function displayETFs(etfs) {
     const container = document.querySelector('#etfAccordion');
     container.innerHTML = '';
 
-    etfs.forEach((etf, index) => {
-        const changeClass = etf.change >= 0 ? 'positive' : 'negative';
-        const changeSymbol = etf.change >= 0 ? '+' : '';
-        const changeIcon = etf.change >= 0 ? '↑' : '↓';
+    // Grouper les ETF par catégorie
+    const groupedByCategory = {};
+    etfs.forEach(etf => {
+        if (!groupedByCategory[etf.category]) {
+            groupedByCategory[etf.category] = [];
+        }
+        groupedByCategory[etf.category].push(etf);
+    });
 
-        const etfItem = document.createElement('div');
-        etfItem.className = 'etf-item';
-        etfItem.innerHTML = `
-            <div class="etf-header" data-index="${index}">
-                <div class="etf-header-left">
-                    <div class="etf-name">${etf.name}</div>
-                    <div class="etf-region">${etf.region} • ${etf.symbol}</div>
-                </div>
-                <div class="etf-header-right">
-                    <div class="etf-price">${etf.price.toFixed(2)} ${etf.currency}</div>
-                    <div class="etf-change ${changeClass}">
-                        ${changeIcon} ${changeSymbol}${etf.change.toFixed(2)}%
-                    </div>
-                </div>
-                <div class="etf-chevron">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="etf-content" data-index="${index}">
-                <div class="etf-description">${etf.description}</div>
-                <div class="etf-details-grid">
-                    <div class="etf-detail">
-                        <div class="etf-detail-label">Ouverture</div>
-                        <div class="etf-detail-value">${etf.open.toFixed(2)} ${etf.currency}</div>
-                    </div>
-                    <div class="etf-detail">
-                        <div class="etf-detail-label">Plus haut</div>
-                        <div class="etf-detail-value">${etf.high.toFixed(2)} ${etf.currency}</div>
-                    </div>
-                    <div class="etf-detail">
-                        <div class="etf-detail-label">Plus bas</div>
-                        <div class="etf-detail-value">${etf.low.toFixed(2)} ${etf.currency}</div>
-                    </div>
-                    <div class="etf-detail">
-                        <div class="etf-detail-label">Volume</div>
-                        <div class="etf-detail-value">${formatLargeNumber(etf.volume)}</div>
-                    </div>
-                </div>
-            </div>
-        `;
+    // Définir l'ordre des catégories
+    const categoryOrder = [
+        'ETF PEA France',
+        'ETF PEA Europe',
+        'ETF PEA S&P 500',
+        'ETF PEA small caps',
+        'ETF PEA sur la tech américaine',
+        'ETF PEA MSCI World',
+        'ETF PEA Emerging Markets',
+        'ETF PEA sur l\'Inde',
+        'ETF PEA sur l\'eau'
+    ];
 
-        // Ajouter l'événement click pour l'accordéon
-        const header = etfItem.querySelector('.etf-header');
-        header.addEventListener('click', () => toggleETF(index));
+    // Afficher les catégories dans l'ordre
+    categoryOrder.forEach(categoryName => {
+        if (!groupedByCategory[categoryName]) return;
 
-        container.appendChild(etfItem);
+        // Créer le header de catégorie (H2)
+        const categoryHeader = document.createElement('h2');
+        categoryHeader.className = 'etf-category-header';
+        categoryHeader.textContent = categoryName;
+        container.appendChild(categoryHeader);
+
+        // Créer le container pour les ETF de cette catégorie
+        const categoryContainer = document.createElement('div');
+        categoryContainer.className = 'etf-category-container';
+
+        // Ajouter chaque ETF de la catégorie
+        groupedByCategory[categoryName].forEach(etf => {
+            const card = createETFCard(etf);
+            categoryContainer.appendChild(card);
+        });
+
+        container.appendChild(categoryContainer);
     });
 }
 
-/**
- * Gère l'ouverture/fermeture d'un ETF accordéon
- */
-function toggleETF(index) {
-    const content = document.querySelector(`.etf-content[data-index="${index}"]`);
-    const header = document.querySelector(`.etf-header[data-index="${index}"]`);
-    const item = header.closest('.etf-item');
 
-    // Fermer tous les autres accordéons
-    document.querySelectorAll('.etf-item').forEach((otherItem, i) => {
-        if (i !== index && otherItem.classList.contains('active')) {
-            otherItem.classList.remove('active');
-            const otherContent = otherItem.querySelector('.etf-content');
-            otherContent.style.maxHeight = null;
-        }
-    });
 
-    // Toggle l'accordéon actuel
-    item.classList.toggle('active');
-    if (item.classList.contains('active')) {
-        content.style.maxHeight = content.scrollHeight + 'px';
-    } else {
-        content.style.maxHeight = null;
-    }
-}
 
-/**
- * Affiche les matières premières PEA avec accordéons
- */
-function displayCommodities(commodities) {
-    const container = document.querySelector('#commoditiesAccordion');
-    container.innerHTML = '';
 
-    commodities.forEach((commodity, index) => {
-        const changeClass = commodity.change >= 0 ? 'positive' : 'negative';
-        const changeSymbol = commodity.change >= 0 ? '+' : '';
-        const changeIcon = commodity.change >= 0 ? '↑' : '↓';
-
-        const commodityItem = document.createElement('div');
-        commodityItem.className = 'commodity-item';
-        commodityItem.innerHTML = `
-            <div class="commodity-header" data-index="${index}">
-                <div class="commodity-header-left">
-                    <div class="commodity-name">${commodity.name}</div>
-                    <div class="commodity-type">${commodity.commodity} • ${commodity.symbol}</div>
-                </div>
-                <div class="commodity-header-right">
-                    <div class="commodity-price">${commodity.price.toFixed(2)} ${commodity.currency}</div>
-                    <div class="commodity-change ${changeClass}">
-                        ${changeIcon} ${changeSymbol}${commodity.change.toFixed(2)}%
-                    </div>
-                </div>
-                <div class="commodity-chevron">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="commodity-content" data-index="${index}">
-                <div class="commodity-description">${commodity.description}</div>
-                <div class="commodity-details-grid">
-                    <div class="commodity-detail">
-                        <div class="commodity-detail-label">Ouverture</div>
-                        <div class="commodity-detail-value">${commodity.open.toFixed(2)} ${commodity.currency}</div>
-                    </div>
-                    <div class="commodity-detail">
-                        <div class="commodity-detail-label">Plus haut</div>
-                        <div class="commodity-detail-value">${commodity.high.toFixed(2)} ${commodity.currency}</div>
-                    </div>
-                    <div class="commodity-detail">
-                        <div class="commodity-detail-label">Plus bas</div>
-                        <div class="commodity-detail-value">${commodity.low.toFixed(2)} ${commodity.currency}</div>
-                    </div>
-                    <div class="commodity-detail">
-                        <div class="commodity-detail-label">Volume</div>
-                        <div class="commodity-detail-value">${formatLargeNumber(commodity.volume)}</div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // Ajouter l'événement click pour l'accordéon
-        const header = commodityItem.querySelector('.commodity-header');
-        header.addEventListener('click', () => toggleCommodity(index));
-
-        container.appendChild(commodityItem);
-    });
-}
-
-/**
- * Gère l'ouverture/fermeture d'un accordéon matière première
- */
-function toggleCommodity(index) {
-    const content = document.querySelector(`.commodity-content[data-index="${index}"]`);
-    const header = document.querySelector(`.commodity-header[data-index="${index}"]`);
-    const item = header.closest('.commodity-item');
-
-    // Fermer tous les autres accordéons
-    document.querySelectorAll('.commodity-item').forEach((otherItem, i) => {
-        if (i !== index && otherItem.classList.contains('active')) {
-            otherItem.classList.remove('active');
-            const otherContent = otherItem.querySelector('.commodity-content');
-            otherContent.style.maxHeight = null;
-        }
-    });
-
-    // Toggle l'accordéon actuel
-    item.classList.toggle('active');
-    if (item.classList.contains('active')) {
-        content.style.maxHeight = content.scrollHeight + 'px';
-    } else {
-        content.style.maxHeight = null;
-    }
-}
-
-/**
- * Affiche les favoris avec accordéons
- */
-async function displayFavorites() {
-    const container = document.querySelector('#favoritesAccordion');
-    const section = document.querySelector('#favoritesSection');
-    const helpMessage = document.getElementById('githubHelpMessage');
-
-    // Toujours afficher la section (pour voir le bouton de configuration)
-    section.classList.remove('hidden');
-
-    if (!gistManager.isConfigured()) {
-        // Afficher message d'aide pour configuration manuelle
-        container.innerHTML = '<div class="favorite-item"><div class="favorite-header">Aucun favori configuré. Cliquez sur "Configurer" pour commencer.</div></div>';
-        if (helpMessage) {
-            helpMessage.classList.add('hidden');
-        }
-        return;
-    }
-
-    // Afficher message de succès si config.js chargé
-    if (window.APP_CONFIG && window.APP_CONFIG.githubToken && window.APP_CONFIG.githubToken !== 'YOUR_GITHUB_TOKEN_HERE') {
-        if (helpMessage) {
-            helpMessage.classList.remove('hidden');
-        }
-    } else {
-        if (helpMessage) {
-            helpMessage.classList.add('hidden');
-        }
-    }
-
-    const favorites = await gistManager.getFavorites();
-
-    if (favorites.length === 0) {
-        container.innerHTML = '<div class="favorite-item"><div class="favorite-header">Aucun favori pour le moment. Recherchez une action et cliquez sur ☆</div></div>';
-        return;
-    }
-
-    container.innerHTML = '';
-
-    // Récupérer les prix en temps réel
-    for (const favorite of favorites) {
-        try {
-            const stockData = await marketAPI.searchStock(favorite.symbol);
-
-            if (stockData.success) {
-                const changeClass = stockData.change >= 0 ? 'positive' : 'negative';
-                const changeSymbol = stockData.change >= 0 ? '+' : '';
-                const changeIcon = stockData.change >= 0 ? '↑' : '↓';
-
-                const favoriteItem = document.createElement('div');
-                favoriteItem.className = 'favorite-item';
-                favoriteItem.innerHTML = `
-                    <div class="favorite-header" data-symbol="${favorite.symbol}">
-                        <div class="favorite-header-left">
-                            <div class="favorite-name">${favorite.name}</div>
-                            <div class="favorite-symbol">${favorite.symbol}</div>
-                        </div>
-                        <div class="favorite-header-right">
-                            <div class="favorite-price">${stockData.price.toFixed(2)} ${stockData.currency}</div>
-                            <div class="favorite-change ${changeClass}">
-                                ${changeIcon} ${changeSymbol}${stockData.change.toFixed(2)}%
-                            </div>
-                        </div>
-                        <button class="favorite-delete" data-symbol="${favorite.symbol}" title="Supprimer">🗑️</button>
-                    </div>
-                `;
-
-                // Event: Clic sur en-tête = rechercher l'action
-                const header = favoriteItem.querySelector('.favorite-header');
-                header.addEventListener('click', (e) => {
-                    if (!e.target.classList.contains('favorite-delete')) {
-                        document.getElementById('searchInput').value = favorite.symbol;
-                        performSearch();
-                    }
-                });
-
-                // Event: Supprimer
-                const deleteBtn = favoriteItem.querySelector('.favorite-delete');
-                deleteBtn.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    await removeFavorite(favorite.symbol);
-                });
-
-                container.appendChild(favoriteItem);
-            }
-        } catch (error) {
-            console.error(`Erreur chargement favori ${favorite.symbol}:`, error);
-        }
-    }
-}
-
-/**
- * Ajouter un favori
- */
-async function addFavorite(symbol, name) {
-    try {
-        console.log('⭐ Ajout aux favoris:', { symbol, name });
-        const added = await gistManager.addFavorite(symbol, name);
-        if (added) {
-            await displayFavorites();
-            updateFavoriteButton(symbol, true);
-
-            // Afficher notification de succès
-            showNotification('✅ Favori ajouté et synchronisé sur GitHub Gist!', 'success');
-        }
-    } catch (error) {
-        console.error('❌ Erreur ajout favori:', error);
-
-        // Message d'erreur détaillé
-        let errorMsg = 'Erreur lors de l\'ajout aux favoris:\n';
-        if (error.message.includes('401')) {
-            errorMsg += 'Token GitHub invalide ou expiré. Vérifiez votre config.js';
-        } else if (error.message.includes('404')) {
-            errorMsg += 'Gist non trouvé. Supprimez le gistId dans config.js et réessayez.';
-        } else if (error.message.includes('GitHub non configuré')) {
-            errorMsg += 'Configurez votre token GitHub en cliquant sur ⚙️';
-        } else {
-            errorMsg += error.message;
-        }
-
-        alert(errorMsg);
-    }
-}
-
-/**
- * Supprimer un favori
- */
-async function removeFavorite(symbol) {
-    await gistManager.removeFavorite(symbol);
-    await displayFavorites();
-    updateFavoriteButton(symbol, false);
-}
-
-/**
- * Met à jour le bouton étoile
- */
-function updateFavoriteButton(symbol, isFavorite) {
-    const btn = document.querySelector('.favorite-star-btn');
-    if (btn) {
-        btn.textContent = isFavorite ? '⭐' : '☆';
-        btn.dataset.favorited = isFavorite;
-    }
-}
-
-/**
- * Affiche une notification temporaire
- */
-function showNotification(message, type = 'info') {
-    // Créer l'élément notification
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.textContent = message;
-
-    // Ajouter au body
-    document.body.appendChild(notification);
-
-    // Afficher avec animation
-    setTimeout(() => notification.classList.add('show'), 10);
-
-    // Masquer après 3 secondes
-    setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
-}
 
 /**
  * Fonction de recherche
@@ -1530,9 +993,6 @@ async function displayResult(data) {
     const changeClass = data.change >= 0 ? 'positive' : 'negative';
     const changeSymbol = data.change >= 0 ? '+' : '';
 
-    // Vérifier si en favoris
-    const isFav = await gistManager.isFavorite(data.symbol);
-
     // Afficher la structure HTML avec placeholders pour chargement asynchrone
     resultContent.innerHTML = `
         <div class="result-main-info">
@@ -1545,9 +1005,6 @@ async function displayResult(data) {
                     </div>
                 </div>
             </div>
-            <button class="favorite-star-btn" data-symbol="${data.symbol}" data-name="${data.name}" data-favorited="${isFav}">
-                ${isFav ? '⭐' : '☆'}
-            </button>
         </div>
 
         <!-- Section Métriques Financières -->
@@ -1611,23 +1068,6 @@ async function displayResult(data) {
     `;
 
     searchResult.classList.remove('hidden');
-
-    // Event listener pour le bouton favori
-    const starBtn = document.querySelector('.favorite-star-btn');
-    if (starBtn) {
-        starBtn.addEventListener('click', async (e) => {
-            const btn = e.target;
-            const symbol = btn.dataset.symbol;
-            const name = btn.dataset.name;
-            const isFavorited = btn.dataset.favorited === 'true';
-
-            if (isFavorited) {
-                await removeFavorite(symbol);
-            } else {
-                await addFavorite(symbol, name);
-            }
-        });
-    }
 
     // Charger les données enrichies de manière asynchrone
     await loadEnhancedData(data.symbol, data.price);

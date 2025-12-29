@@ -761,87 +761,81 @@ footer {
 }
 
 /* ===================================
-   Styles ETF Accordéons
+   Styles ETF par Catégories
    =================================== */
 
-.etf-item {
+/* Titres de catégorie (H2) */
+.etf-category-header {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+    margin: 30px 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #667eea;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.etf-category-header:first-child {
+    margin-top: 0;
+}
+
+/* Container de catégorie */
+.etf-category-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+/* Cartes ETF */
+.etf-card {
     background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
     border-radius: 12px;
     border: 1px solid #e0e0e0;
-    overflow: hidden;
+    padding: 20px;
     transition: all 0.3s ease;
 }
 
-.etf-item:hover {
+.etf-card:hover {
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
     border-color: #667eea;
+    transform: translateY(-2px);
 }
 
-.etf-item.active {
-    border-color: #667eea;
-    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.25);
+/* En-tête de carte ETF */
+.etf-card-header {
+    margin-bottom: 12px;
 }
 
-.etf-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    position: relative;
-}
-
-.etf-header:hover {
-    background: linear-gradient(135deg, #f0f2ff 0%, #ffffff 100%);
-}
-
-.etf-item.active .etf-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-}
-
-.etf-header-left {
-    flex: 1;
-}
-
-.etf-name {
-    font-size: 1.1rem;
+.etf-title {
+    font-size: 1.2rem;
     font-weight: 600;
     color: #333;
-    margin-bottom: 4px;
+    margin: 0 0 6px 0;
 }
 
-.etf-item.active .etf-name {
-    color: white;
-}
-
-.etf-region {
+.etf-meta {
     font-size: 0.85rem;
     color: #666;
-    opacity: 0.9;
 }
 
-.etf-item.active .etf-region {
-    color: rgba(255, 255, 255, 0.9);
-}
-
-.etf-header-right {
+/* Section prix */
+.etf-pricing {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
-    margin-right: 12px;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e0e0e0;
 }
 
 .etf-price {
     font-size: 1.15rem;
     font-weight: 700;
     color: #333;
-}
-
-.etf-item.active .etf-price {
-    color: white;
 }
 
 .etf-change {
@@ -861,56 +855,21 @@ footer {
     color: #c62828;
 }
 
-.etf-item.active .etf-change.positive {
-    background: rgba(255, 255, 255, 0.25);
-    color: #e8f5e9;
-}
-
-.etf-item.active .etf-change.negative {
-    background: rgba(255, 255, 255, 0.25);
-    color: #ffcdd2;
-}
-
-.etf-chevron {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.3s ease;
-}
-
-.etf-item.active .etf-chevron {
-    transform: rotate(180deg);
-}
-
-.etf-chevron svg {
-    color: #666;
-}
-
-.etf-item.active .etf-chevron svg {
-    color: white;
-}
-
-/* Contenu accordéon */
-.etf-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-    background: white;
-}
-
+/* Description toujours visible */
 .etf-description {
-    padding: 20px 20px 15px 20px;
     color: #555;
     font-size: 0.95rem;
     line-height: 1.5;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
     border-bottom: 1px solid #e0e0e0;
 }
 
+/* Grille de détails */
 .etf-details-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-    padding: 20px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
 }
 
 .etf-detail {
@@ -933,11 +892,8 @@ footer {
 }
 
 /* Loading state pour ETF */
-.etf-item.loading {
+.etf-card.loading {
     pointer-events: none;
-}
-
-.etf-item.loading .etf-header {
     background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
     background-size: 200% 100%;
     animation: loading 1.5s infinite;
@@ -954,28 +910,18 @@ footer {
 
 /* Responsive ETF */
 @media (max-width: 768px) {
-    .etf-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
+    .etf-category-container {
+        grid-template-columns: 1fr;
+        gap: 15px;
     }
 
-    .etf-header-right {
-        flex-direction: row;
-        align-items: center;
-        gap: 12px;
-        margin-right: 0;
-    }
-
-    .etf-chevron {
-        position: absolute;
-        top: 20px;
-        right: 20px;
+    .etf-category-header {
+        font-size: 1.3rem;
     }
 
     .etf-details-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
+        gap: 10px;
     }
 
     .etf-section {
@@ -988,7 +934,7 @@ footer {
         grid-template-columns: 1fr;
     }
 
-    .etf-name {
+    .etf-title {
         font-size: 1rem;
     }
 
@@ -996,401 +942,13 @@ footer {
         font-size: 1rem;
     }
 
+    .etf-category-header {
+        font-size: 1.2rem;
+    }
+
     .etf-section {
         padding: 15px;
     }
-}
-
-/* ===================================
-   Styles Matières Premières
-   =================================== */
-
-.commodities-section {
-    background: white;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    margin-bottom: 30px;
-}
-
-.commodities-section h2 {
-    margin-bottom: 20px;
-    color: #333;
-    font-size: 1.8rem;
-}
-
-.commodities-accordion {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.commodity-item {
-    background: linear-gradient(135deg, #fff9e6 0%, #ffffff 100%);
-    border-radius: 12px;
-    border: 1px solid #f0e4c3;
-    overflow: hidden;
-    transition: all 0.3s ease;
-}
-
-.commodity-item:hover {
-    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
-    border-color: #ffc107;
-}
-
-.commodity-item.active {
-    border-color: #ffc107;
-    box-shadow: 0 4px 16px rgba(255, 193, 7, 0.3);
-}
-
-.commodity-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    position: relative;
-}
-
-.commodity-header:hover {
-    background: linear-gradient(135deg, #fffbf0 0%, #ffffff 100%);
-}
-
-.commodity-item.active .commodity-header {
-    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
-    color: white;
-}
-
-.commodity-header-left {
-    flex: 1;
-}
-
-.commodity-name {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 4px;
-}
-
-.commodity-item.active .commodity-name {
-    color: white;
-}
-
-.commodity-type {
-    font-size: 0.85rem;
-    color: #666;
-    opacity: 0.9;
-}
-
-.commodity-item.active .commodity-type {
-    color: rgba(255, 255, 255, 0.9);
-}
-
-.commodity-header-right {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
-    margin-right: 12px;
-}
-
-.commodity-price {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #333;
-}
-
-.commodity-item.active .commodity-price {
-    color: white;
-}
-
-.commodity-change {
-    font-size: 0.9rem;
-    font-weight: 600;
-    padding: 4px 10px;
-    border-radius: 6px;
-}
-
-.commodity-change.positive {
-    background: #e8f5e9;
-    color: #2e7d32;
-}
-
-.commodity-change.negative {
-    background: #ffebee;
-    color: #c62828;
-}
-
-.commodity-item.active .commodity-change.positive {
-    background: rgba(255, 255, 255, 0.25);
-    color: #e8f5e9;
-}
-
-.commodity-item.active .commodity-change.negative {
-    background: rgba(255, 255, 255, 0.25);
-    color: #ffcdd2;
-}
-
-.commodity-chevron {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.3s ease;
-}
-
-.commodity-item.active .commodity-chevron {
-    transform: rotate(180deg);
-}
-
-.commodity-chevron svg {
-    color: #666;
-}
-
-.commodity-item.active .commodity-chevron svg {
-    color: white;
-}
-
-/* Contenu accordéon */
-.commodity-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-    background: white;
-}
-
-.commodity-description {
-    padding: 20px 20px 15px 20px;
-    color: #555;
-    font-size: 0.95rem;
-    line-height: 1.5;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.commodity-details-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-    padding: 20px;
-}
-
-.commodity-detail {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.commodity-detail-label {
-    font-size: 0.8rem;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.commodity-detail-value {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #333;
-}
-
-/* Loading state */
-.commodity-item.loading {
-    pointer-events: none;
-}
-
-.commodity-item.loading .commodity-header {
-    background: linear-gradient(90deg, #fff9e6 25%, #ffeaa7 50%, #fff9e6 75%);
-    background-size: 200% 100%;
-    animation: loading 1.5s infinite;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .commodity-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
-
-    .commodity-header-right {
-        flex-direction: row;
-        align-items: center;
-        gap: 12px;
-        margin-right: 0;
-    }
-
-    .commodity-chevron {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-    }
-
-    .commodity-details-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-    }
-
-    .commodities-section {
-        padding: 20px;
-    }
-}
-
-@media (max-width: 480px) {
-    .commodity-details-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .commodity-name {
-        font-size: 1rem;
-    }
-
-    .commodity-price {
-        font-size: 1rem;
-    }
-
-    .commodities-section {
-        padding: 15px;
-    }
-}
-
-/* ===================================
-   Styles Favoris
-   =================================== */
-
-.favorites-section {
-    background: white;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    margin-bottom: 30px;
-}
-
-.favorites-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.favorites-header h2 {
-    color: #333;
-    font-size: 1.8rem;
-    margin: 0;
-}
-
-.config-btn {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 5px 10px;
-    border-radius: 5px;
-    transition: background 0.2s;
-}
-
-.config-btn:hover {
-    background: #f0f0f0;
-}
-
-.favorites-accordion {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.favorite-item {
-    background: linear-gradient(135deg, #e8f5e9 0%, #ffffff 100%);
-    border-radius: 12px;
-    border: 1px solid #c8e6c9;
-    overflow: hidden;
-    transition: all 0.3s ease;
-}
-
-.favorite-item:hover {
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
-    border-color: #4caf50;
-}
-
-.favorite-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px;
-    cursor: pointer;
-    position: relative;
-}
-
-.favorite-header:hover {
-    background: linear-gradient(135deg, #f1f8f1 0%, #ffffff 100%);
-}
-
-.favorite-header-left {
-    flex: 1;
-}
-
-.favorite-name {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 4px;
-}
-
-.favorite-symbol {
-    font-size: 0.85rem;
-    color: #666;
-    opacity: 0.9;
-}
-
-.favorite-header-right {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
-    margin-right: 50px;
-}
-
-.favorite-price {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #333;
-}
-
-.favorite-change {
-    font-size: 0.9rem;
-    font-weight: 600;
-    padding: 4px 10px;
-    border-radius: 6px;
-}
-
-.favorite-delete {
-    background: none;
-    border: none;
-    font-size: 1.3rem;
-    cursor: pointer;
-    padding: 5px;
-    border-radius: 5px;
-    transition: background 0.2s;
-}
-
-.favorite-delete:hover {
-    background: rgba(244, 67, 54, 0.1);
-}
-
-/* Bouton étoile sur résultat */
-.favorite-star-btn {
-    background: none;
-    border: 2px solid #ffc107;
-    font-size: 2rem;
-    cursor: pointer;
-    padding: 10px 20px;
-    border-radius: 10px;
-    transition: all 0.2s;
-    margin-left: 20px;
-}
-
-.favorite-star-btn:hover {
-    background: #fff9e6;
-    transform: scale(1.1);
 }
 
 .result-main-info {
@@ -1399,289 +957,10 @@ footer {
     align-items: center;
 }
 
-/* Modal GitHub */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.modal.hidden {
-    display: none;
-}
-
-.modal-content {
-    background: white;
-    padding: 30px;
-    border-radius: 15px;
-    max-width: 600px;
-    width: 90%;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.modal-content h2 {
-    margin-top: 0;
-    color: #333;
-}
-
-.modal-content p {
-    color: #555;
-    line-height: 1.6;
-}
-
-.modal-content ol {
-    text-align: left;
-    color: #555;
-    line-height: 1.8;
-}
-
-.modal-content ol li {
-    margin-bottom: 8px;
-}
-
-.modal-content input {
-    width: 100%;
-    padding: 12px;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    font-size: 1rem;
-    margin: 15px 0;
-    box-sizing: border-box;
-}
-
-.modal-content input:focus {
-    outline: none;
-    border-color: #4caf50;
-}
-
-.modal-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-}
-
-.modal-buttons button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: opacity 0.2s;
-    font-weight: 600;
-}
-
-.modal-buttons button:first-child {
-    background: #4caf50;
-    color: white;
-}
-
-.modal-buttons button:last-child {
-    background: #f44336;
-    color: white;
-}
-
-.modal-buttons button:hover {
-    opacity: 0.8;
-}
-
 /* Responsive */
 @media (max-width: 768px) {
-    .favorite-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-    .favorite-header-right {
-        flex-direction: row;
-        gap: 12px;
-        margin-right: 0;
-    }
-
-    .favorite-delete {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-    }
-
-    .favorite-star-btn {
-        margin-left: 0;
-        margin-top: 15px;
-    }
-
     .result-main-info {
         flex-direction: column;
         align-items: flex-start;
     }
-
-    .favorites-section {
-        padding: 20px;
-    }
-
-    .modal-content {
-        padding: 20px;
-    }
-}
-
-@media (max-width: 480px) {
-    .favorites-section {
-        padding: 15px;
-    }
-
-    .favorite-name {
-        font-size: 1rem;
-    }
-
-    .favorite-price {
-        font-size: 1rem;
-    }
-
-    .favorite-star-btn {
-        font-size: 1.5rem;
-        padding: 8px 15px;
-    }
-
-    .modal-content {
-        padding: 15px;
-    }
-
-    .modal-content h2 {
-        font-size: 1.3rem;
-    }
-}
-
-/* ===================================
-   Message d'aide
-   =================================== */
-
-.help-message {
-    background: linear-gradient(135deg, #e3f2fd 0%, #ffffff 100%);
-    border-left: 4px solid #2196f3;
-    padding: 15px 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-.help-message p {
-    margin: 5px 0;
-    color: #333;
-    font-size: 0.95rem;
-}
-
-.help-message code {
-    background: #f5f5f5;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-family: monospace;
-    color: #d32f2f;
-}
-
-/* ===================================
-   Notifications
-   =================================== */
-
-.notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 15px 25px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    font-weight: 600;
-    opacity: 0;
-    transform: translateY(-20px);
-    transition: all 0.3s ease;
-    z-index: 10000;
-}
-
-.notification.show {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.notification-success {
-    background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
-    color: white;
-}
-
-.notification-error {
-    background: linear-gradient(135deg, #f44336 0%, #e57373 100%);
-    color: white;
-}
-
-.notification-info {
-    background: linear-gradient(135deg, #2196f3 0%, #64b5f6 100%);
-    color: white;
-}
-
-/* Configuration modal sections */
-.config-section {
-    margin: 20px 0;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border-left: 4px solid #673ab7;
-}
-
-.config-section h3 {
-    margin-top: 0;
-    color: #673ab7;
-    font-size: 16px;
-}
-
-.config-section ol {
-    margin: 10px 0;
-    padding-left: 20px;
-}
-
-.config-section code {
-    background: #e0e0e0;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-family: 'Courier New', monospace;
-    font-size: 13px;
-}
-
-/* Form group for Gist ID input */
-.form-group {
-    margin: 15px 0;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: #333;
-    font-size: 14px;
-}
-
-.form-group input[type="text"] {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    box-sizing: border-box;
-    transition: border-color 0.3s ease;
-}
-
-.form-group input[type="text"]:focus {
-    outline: none;
-    border-color: #673ab7;
-    box-shadow: 0 0 0 2px rgba(103, 58, 183, 0.1);
-}
-
-.help-text {
-    display: block;
-    margin-top: 8px;
-    font-size: 12px;
-    color: #666;
-    line-height: 1.6;
 }

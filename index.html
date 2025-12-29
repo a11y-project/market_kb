@@ -27,27 +27,6 @@
             </div>
         </div>
 
-        <!-- Mes Favoris -->
-        <div class="favorites-section" id="favoritesSection">
-            <div class="favorites-header">
-                <h2>Mes Favoris</h2>
-                <button id="configGithubBtn" class="config-btn" title="Configurer GitHub">Configurer</button>
-            </div>
-            <div id="favoritesAccordion" class="favorites-accordion">
-                <div class="favorite-item loading">
-                    <div class="favorite-header">
-                        <span>Chargement...</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Message d'aide si GitHub n'est pas configuré -->
-        <div id="githubHelpMessage" class="help-message hidden">
-            <p>💡 <strong>Configuration détectée :</strong> Votre fichier <code>config.js</code> a été chargé avec succès!</p>
-            <p>Si vous souhaitez modifier votre token, cliquez sur le bouton "Configurer".</p>
-        </div>
-
         <!-- Résultat de la recherche -->
         <div id="searchResult" class="result-card hidden">
             <div class="result-header">
@@ -73,72 +52,11 @@
             </div>
         </div>
 
-        <!-- Matières Premières PEA -->
-        <div class="commodities-section">
-            <h2>Matières Premières PEA</h2>
-            <div id="commoditiesAccordion" class="commodities-accordion">
-                <!-- Les matières seront générées dynamiquement par JavaScript -->
-                <div class="commodity-item loading">
-                    <div class="commodity-header">
-                        <span>Chargement des matières premières...</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <footer>
             <p>Données fournies par Yahoo Finance</p>
             <p class="footer-note">Projet open source - Hébergé sur GitHub Pages</p>
 </footer>
     </div>
-
-    <!-- Modal Configuration GitHub -->
-    <div id="githubConfigModal" class="modal hidden">
-        <div class="modal-content">
-            <h2>Configuration GitHub</h2>
-
-            <div class="config-section">
-                <h3>📱 Première utilisation ?</h3>
-                <ol>
-                    <li>Allez sur <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings → Personal Access Tokens</a></li>
-                    <li>Cliquez "Generate new token (classic)"</li>
-                    <li>Cochez le scope <strong>gist</strong></li>
-                    <li>Copiez le token et collez-le ci-dessous</li>
-                    <li>Laissez le Gist ID vide (un nouveau Gist sera créé automatiquement)</li>
-                </ol>
-            </div>
-
-            <div class="config-section">
-                <h3>🔄 Synchroniser avec un autre appareil ?</h3>
-                <ol>
-                    <li>Sur votre autre appareil, ouvrez la console (F12)</li>
-                    <li>Cherchez le message : <code>📥 Récupération des favoris depuis GitHub Gist... [ID]</code></li>
-                    <li>Copiez le Gist ID (ex: 96d4a70c1fa49af5510c3ebc56543039)</li>
-                    <li>Collez le token ET le Gist ID ci-dessous</li>
-                </ol>
-            </div>
-
-            <hr>
-
-            <input type="password" id="githubToken" placeholder="Collez votre token ici (ghp_xxxxxxxxxxxx)">
-
-            <div class="form-group">
-                <label for="githubGistId">Gist ID (optionnel - pour synchroniser avec un autre appareil)</label>
-                <input type="text" id="githubGistId" placeholder="Ex: 96d4a70c1fa49af5510c3ebc56543039">
-                <small class="help-text">
-                    💡 Laissez vide pour créer un nouveau Gist.<br>
-                    Pour synchroniser avec votre PC, saisissez le Gist ID affiché dans la console du PC.
-                </small>
-            </div>
-            <div class="modal-buttons">
-                <button id="saveGithubToken">Enregistrer</button>
-                <button id="cancelGithubToken">Annuler</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Configuration (chargée en premier) -->
-    <script src="config.js"></script>
 
     <!-- Script JavaScript -->
     <script src="app.js"></script>
