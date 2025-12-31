@@ -151,131 +151,12 @@ class MarketAPI {
 const marketAPI = new MarketAPI();
 
 /**
- * Formate un grand nombre en notation abrégée (T, B, M, K)
- */
-function formatLargeNumber(num) {
-    if (!num && num !== 0) return '--';
-
-    if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
-    if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
-    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
-    return num.toFixed(2);
-}
-
-/**
- * Formate un montant avec la devise
- */
-function formatCurrency(value, currency = 'EUR') {
-    if (value === null || value === undefined || isNaN(value)) return 'N/A';
-    try {
-        const symbols = { 'EUR': '€', 'USD': '$', 'GBP': '£', 'CHF': 'CHF' };
-        const symbol = symbols[currency] || currency;
-        return `${value.toFixed(2)} ${symbol}`;
-    } catch (error) {
-        return 'N/A';
-    }
-}
-
-/**
- * Formate un pourcentage à partir d'une décimale
- */
-function formatPercentage(value) {
-    if (value === null || value === undefined || isNaN(value)) return 'N/A';
-    try {
-        return `${(value * 100).toFixed(2)}%`;
-    } catch (error) {
-        return 'N/A';
-    }
-}
-
-/**
- * Formate un grand nombre avec la devise
- */
-function formatLargeNumberWithCurrency(num, currency = 'EUR') {
-    if (num === null || num === undefined || isNaN(num)) return 'N/A';
-    try {
-        const symbols = { 'EUR': '€', 'USD': '$', 'GBP': '£', 'CHF': 'CHF' };
-        const symbol = symbols[currency] || currency;
-
-        if (num >= 1e12) return `${(num / 1e12).toFixed(2)}T ${symbol}`;
-        if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B ${symbol}`;
-        if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M ${symbol}`;
-        if (num >= 1e3) return `${(num / 1e3).toFixed(2)}K ${symbol}`;
-        return `${num.toFixed(2)} ${symbol}`;
-    } catch (error) {
-        return 'N/A';
-    }
-}
-
-/**
- * Formate un timestamp Unix en date et heure lisible
- */
-function formatMarketTime(timestamp) {
-    if (!timestamp) return 'N/A';
-    try {
-        const date = new Date(timestamp * 1000);
-        return date.toLocaleString('fr-FR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    } catch (error) {
-        return 'N/A';
-    }
-}
-
-/**
- * Traduit les états du marché en français
- */
-function formatMarketState(state) {
-    if (!state) return 'N/A';
-    try {
-        const states = {
-            'REGULAR': 'Ouvert',
-            'PRE': 'Pré-marché',
-            'POST': 'Post-marché',
-            'CLOSED': 'Fermé',
-            'PREPRE': 'Avant ouverture',
-            'POSTPOST': 'Après clôture'
-        };
-        return states[state] || state;
-    } catch (error) {
-        return 'N/A';
-    }
-}
-
-/**
- * Formate un ratio avec un nombre de décimales spécifié
- */
-function formatRatio(value, decimals = 2) {
-    if (value === null || value === undefined || isNaN(value)) return 'N/A';
-    try {
-        return value.toFixed(decimals);
-    } catch (error) {
-        return 'N/A';
-    }
-}
-
-/**
  * Crée une carte ETF individuelle
  */
 function createETFCard(etf) {
     const changeClass = etf.change >= 0 ? 'positive' : 'negative';
     const changeSymbol = etf.change >= 0 ? '+' : '';
     const changeIcon = etf.change >= 0 ? '↑' : '↓';
-
-    // Helper function pour créer un élément de détail
-    const createDetail = (label, value) => {
-        return `
-            <div class="etf-detail">
-                <div class="etf-detail-label">${label}</div>
-                <div class="etf-detail-value">${value}</div>
-            </div>
-        `;
-    };
 
     const card = document.createElement('div');
     card.className = 'etf-card';
@@ -292,48 +173,9 @@ function createETFCard(etf) {
             </div>
         </div>
 
-        <!-- Section 1: Données de Trading -->
-        <h4 class="etf-section-title">Données de Trading</h4>
-        <div class="etf-details-grid">
-            ${createDetail('Ouverture', formatCurrency(etf.open, etf.currency))}
-            ${createDetail('Plus haut', formatCurrency(etf.high, etf.currency))}
-            ${createDetail('Plus bas', formatCurrency(etf.low, etf.currency))}
-            ${createDetail('Clôture préc.', formatCurrency(etf.previousClose, etf.currency))}
-            ${createDetail('Volume', formatLargeNumber(etf.volume))}
-            ${createDetail('Vol. moyen', formatLargeNumber(etf.averageVolume))}
-        </div>
-
-        <!-- Section 2: Performance 52 Semaines -->
-        <h4 class="etf-section-title">Performance 52 Semaines</h4>
-        <div class="etf-details-grid">
-            ${createDetail('Plus haut 52s', formatCurrency(etf.fiftyTwoWeekHigh, etf.currency))}
-            ${createDetail('Plus bas 52s', formatCurrency(etf.fiftyTwoWeekLow, etf.currency))}
-            ${createDetail('Moyenne 50j', formatCurrency(etf.fiftyDayAverage, etf.currency))}
-            ${createDetail('Moyenne 200j', formatCurrency(etf.twoHundredDayAverage, etf.currency))}
-        </div>
-
-        <!-- Section 3: Indicateurs Financiers -->
-        <h4 class="etf-section-title">Indicateurs Financiers</h4>
-        <div class="etf-details-grid">
-            ${createDetail('Capitalisation', formatLargeNumberWithCurrency(etf.marketCap, etf.currency))}
-            ${createDetail('P/E', formatRatio(etf.trailingPE))}
-            ${createDetail('P/E Forward', formatRatio(etf.forwardPE))}
-            ${createDetail('BPA', formatCurrency(etf.trailingEps, etf.currency))}
-            ${createDetail('Valeur comptable', formatCurrency(etf.bookValue, etf.currency))}
-            ${createDetail('Prix/Val. comptable', formatRatio(etf.priceToBook))}
-            ${createDetail('Beta', formatRatio(etf.beta, 3))}
-            ${createDetail('Rendement Dividende', formatPercentage(etf.dividendYield))}
-            ${createDetail('Frais de gestion (TER)', etf.expenseRatio ? formatPercentage(etf.expenseRatio) : 'N/A')}
-        </div>
-
-        <!-- Section 4: Informations Générales -->
-        <h4 class="etf-section-title">Informations Générales</h4>
-        <div class="etf-details-grid">
-            ${createDetail('Bourse', etf.exchange || 'N/A')}
-            ${createDetail('Type', etf.quoteType || 'N/A')}
-            ${createDetail('État marché', formatMarketState(etf.marketState))}
-            ${createDetail('Dernière MAJ', formatMarketTime(etf.regularMarketTime))}
-        </div>
+        <!-- Données Brutes API -->
+        <h4 class="etf-section-title">Données Brutes API</h4>
+        <pre class="api-raw-data">${JSON.stringify(etf.apiResponse, null, 2)}</pre>
     `;
 
     // Ajouter un event listener pour afficher les données de l'API en console

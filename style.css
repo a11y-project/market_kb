@@ -158,30 +158,20 @@ header h1 {
     border-bottom: 2px solid #e0e0e0;
 }
 
-.etf-details-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 15px;
-    margin-bottom: 15px;
-}
-
-.etf-detail {
-    padding: 12px;
+/* API Raw Data */
+.api-raw-data {
     background: #f8f9fa;
+    border: 1px solid #e0e0e0;
     border-radius: 8px;
-    border-left: 3px solid #667eea;
-}
-
-.etf-detail-label {
-    font-size: 0.85rem;
-    color: #666;
-    margin-bottom: 5px;
-}
-
-.etf-detail-value {
-    font-size: 1rem;
-    font-weight: 600;
+    padding: 15px;
+    font-size: 0.75rem;
+    font-family: 'Courier New', Courier, monospace;
     color: #333;
+    overflow-x: auto;
+    max-height: 400px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 /* Loading state */
@@ -236,8 +226,9 @@ footer p {
         text-align: center;
     }
 
-    .etf-details-grid {
-        grid-template-columns: 1fr;
+    .api-raw-data {
+        font-size: 0.65rem;
+        max-height: 300px;
     }
 }
 
@@ -260,5 +251,11 @@ footer p {
 
     .etf-change {
         font-size: 1rem;
+    }
+
+    .api-raw-data {
+        font-size: 0.6rem;
+        max-height: 250px;
+        padding: 10px;
     }
 }
