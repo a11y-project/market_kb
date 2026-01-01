@@ -53,48 +53,14 @@ class MarketAPI {
                     const prevClose = meta.previousClose || 0;
                     const change = prevClose ? ((price - prevClose) / prevClose * 100) : 0;
 
-                    // Récupérer le ratio de frais via quoteSummary
-                    const expenseRatio = await this.getExpenseRatio(symbol);
-
                     results.push({
                         symbol: symbol,
                         name: meta.longName || symbol,
                         category: category,
                         price: price,
                         change: change,
-                        // Données de trading
-                        open: meta.regularMarketOpen || null,
-                        high: meta.regularMarketDayHigh || null,
-                        low: meta.regularMarketDayLow || null,
-                        previousClose: meta.previousClose || null,
-                        volume: meta.regularMarketVolume || null,
                         currency: meta.currency || 'EUR',
-                        // Performance 52 semaines
-                        fiftyTwoWeekHigh: meta.fiftyTwoWeekHigh || null,
-                        fiftyTwoWeekLow: meta.fiftyTwoWeekLow || null,
-                        fiftyDayAverage: meta.fiftyDayAverage || null,
-                        twoHundredDayAverage: meta.twoHundredDayAverage || null,
-                        // Volume moyen
-                        averageVolume: meta.regularMarketVolume || null,
-                        averageVolume10days: meta.averageDailyVolume10Day || null,
-                        // Indicateurs financiers
-                        marketCap: meta.marketCap || null,
-                        dividendYield: meta.dividendYield || null,
-                        trailingPE: meta.trailingPE || null,
-                        forwardPE: meta.forwardPE || null,
-                        trailingEps: meta.epsTrailingTwelveMonths || null,
-                        bookValue: meta.bookValue || null,
-                        priceToBook: meta.priceToBook || null,
-                        beta: meta.beta || null,
-                        expenseRatio: expenseRatio,
-                        // Informations générales
-                        longName: meta.longName || symbol,
-                        exchange: meta.exchangeName || meta.fullExchangeName || null,
-                        quoteType: meta.quoteType || null,
-                        marketState: meta.marketState || null,
-                        regularMarketTime: meta.regularMarketTime || null,
-                        timezone: meta.timezone || null,
-                        apiResponse: data // Stocker la réponse brute de l'API
+                        apiResponse: data
                     });
                 }
                 // Petit délai pour éviter de surcharger l'API
@@ -105,38 +71,6 @@ class MarketAPI {
         }
 
         return results;
-    }
-
-    /**
-     * Récupère le ratio de frais (TER) pour un ETF
-     */
-    async getExpenseRatio(symbol) {
-        try {
-            const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${symbol}`;
-            const params = new URLSearchParams({
-                modules: 'fundProfile'
-            });
-
-            const response = await fetch(`${this.corsProxy}${encodeURIComponent(url + '?' + params)}`);
-            const data = await response.json();
-
-            if (data.quoteSummary?.result?.[0]?.fundProfile) {
-                const fundProfile = data.quoteSummary.result[0].fundProfile;
-
-                // Essayer plusieurs sources possibles
-                const expenseRatio = fundProfile.feesExpensesInvestment?.annualReportExpenseRatio?.raw ||
-                                     fundProfile.feesExpensesInvestment?.annualReportExpenseRatio ||
-                                     fundProfile.annualReportExpenseRatio?.raw ||
-                                     fundProfile.annualReportExpenseRatio ||
-                                     null;
-
-                return expenseRatio;
-            }
-            return null;
-        } catch (error) {
-            console.error(`Erreur récupération expense ratio pour ${symbol}:`, error);
-            return null;
-        }
     }
 
     /**
